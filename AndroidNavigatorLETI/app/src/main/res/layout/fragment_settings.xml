@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingStart="17dp"
+    android:paddingLeft="17dp"
+    android:paddingEnd="35dp"
+    android:paddingRight="35dp">
+
+    <include
+        android:id="@+id/geo_layout"
+        layout="@layout/settings_switch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <include
+        android:id="@+id/history_layout"
+        layout="@layout/settings_switch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+
+</LinearLayout>
