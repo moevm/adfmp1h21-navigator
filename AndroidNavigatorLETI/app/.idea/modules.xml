@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/-1199149389/AndroidNavigatorLETI.iml" filepath="$PROJECT_DIR$/.idea/modules/-1199149389/AndroidNavigatorLETI.iml" group="AndroidNavigatorLETI" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app.iml" filepath="$PROJECT_DIR$/.idea/modules/app.iml" group="AndroidNavigatorLETI/app" />
+    </modules>
+  </component>
+</project>

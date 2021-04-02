@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main_graph"
+    app:startDestination="@id/main">
+
+    <fragment
+        android:id="@+id/main"
+        android:name="com.example.androidnavigatorleti.ui.main.MapFragment"
+        android:label="Map"
+        tools:layout="@layout/fragment_map">
+
+        <argument
+            android:name="setMarker"
+            android:defaultValue="false"
+            app:argType="boolean" />
+
+        <argument
+            android:name="makeRoot"
+            android:defaultValue="false"
+            app:argType="boolean" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/search"
+        android:name="com.example.androidnavigatorleti.ui.search.SearchFragment"
+        android:label="Search"
+        tools:layout="@layout/fragment_search">
+
+        <action
+            android:id="@+id/action_set_marker"
+            app:destination="@id/main"
+            app:popUpTo="@id/search">
+
+            <argument
+                android:name="setMarker"
+                android:defaultValue="false"
+                app:argType="boolean" />
+        </action>
+
+        <action
+            android:id="@+id/action_make_root"
+            app:destination="@id/main"
+            app:popUpTo="@id/search">
+
+            <argument
+                android:name="makeRoot"
+                android:defaultValue="false"
+                app:argType="boolean" />
+        </action>
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/history"
+        android:name="com.example.androidnavigatorleti.ui.history.HistoryFragment"
+        android:label="History"
+        tools:layout="@layout/fragment_history" />
+
+    <fragment
+        android:id="@+id/menu_navigation_view"
+        android:name="com.example.androidnavigatorleti.ui.menu.MenuFragment"
+        android:label="Menu"
+        tools:layout="@layout/fragment_menu" />
+
+    <fragment
+        android:id="@+id/settings"
+        android:name="com.example.androidnavigatorleti.ui.SettingsFragment"
+        android:label="Settings"
+        tools:layout="@layout/fragment_settings" />
+
+    <fragment
+        android:id="@+id/about"
+        android:name="com.example.androidnavigatorleti.ui.AboutFragment"
+        android:label="About"
+        tools:layout="@layout/fragment_about" />
+
+    <fragment
+        android:id="@+id/unregistered"
+        android:name="com.example.androidnavigatorleti.ui.profile.UserUnregisteredFragment"
+        android:label="History"
+        tools:layout="@layout/fragment_unregistered" />
+
+    <fragment
+        android:id="@+id/registration"
+        android:name="com.example.androidnavigatorleti.ui.profile.RegistrationFragment"
+        android:label="Registration"
+        tools:layout="@layout/fragment_registration" />
+
+</navigation>
