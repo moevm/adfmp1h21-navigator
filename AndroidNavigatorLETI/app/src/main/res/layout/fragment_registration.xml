@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingLeft="10dp"
+    android:paddingRight="10dp">
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/name_container"
+        style="@style/CardInfoEditTextInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="29dp"
+        android:hint="@string/name_hint"
+        android:textColorHint="@color/colorSecondaryDark"
+        app:hintTextAppearance="@style/CardInfoHintStyle"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.appcompat.widget.AppCompatEditText
+            android:id="@+id/name_text"
+            style="@style/CardInfoEditText"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/text_field_height"
+            android:inputType="textCapSentences"
+            android:maxLength="30"
+            android:maxLines="1" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/surname_container"
+        style="@style/CardInfoEditTextInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="29dp"
+        android:hint="@string/surname_hint"
+        android:textColorHint="@color/colorSecondaryDark"
+        app:hintTextAppearance="@style/CardInfoHintStyle"
+        app:layout_constraintLeft_toLeftOf="@+id/name_container"
+        app:layout_constraintTop_toBottomOf="@+id/name_container">
+
+        <androidx.appcompat.widget.AppCompatEditText
+            android:id="@+id/surname_text"
+            style="@style/CardInfoEditText"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/text_field_height"
+            android:inputType="textCapSentences"
+            android:maxLength="30"
+            android:maxLines="1" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/birthday_container"
+        style="@style/CardInfoEditTextInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="29dp"
+        android:hint="@string/birthday_hint"
+        android:textColorHint="@color/colorSecondaryDark"
+        app:hintTextAppearance="@style/CardInfoHintStyle"
+        app:layout_constraintLeft_toLeftOf="@+id/surname_container"
+        app:layout_constraintTop_toBottomOf="@+id/surname_container">
+
+        <androidx.appcompat.widget.AppCompatEditText
+            android:id="@+id/birthday_text"
+            style="@style/CardInfoEditText"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/text_field_height"
+            android:focusableInTouchMode="false"
+            android:imeOptions="actionDone"
+            android:inputType="text" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/approve_button"
+        style="@style/RegistrationButton"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginBottom="60dp"
+        android:text="@string/approve"
+        app:backgroundTint="@color/colorAccent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
