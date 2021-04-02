@@ -1,0 +1,93 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.MaterialComponents.Light.NoActionBar" />
+
+    <style name="AppTheme.Main" parent="AppTheme">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryVariant">@color/colorPrimaryDark</item>
+        <item name="colorSecondary">@color/colorPrimary</item>
+        <item name="colorSecondaryVariant">@color/colorPrimary</item>
+        <item name="android:textColorPrimary">@color/black</item>
+        <item name="colorButtonNormal">@color/app_white</item>
+        <item name="android:textColorSecondary">@color/app_white</item>
+        <item name="android:windowTranslucentStatus" tools:targetApi="lollipop">true</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:forceDarkAllowed" tools:targetApi="q">false</item>
+    </style>
+
+    <style name="ToolbarColored" parent="AppTheme">
+        <item name="android:textColor">@color/app_white</item>
+        <item name="colorControlNormal">@color/app_white</item>
+        <item name="android:textColorSecondary">@color/app_white</item>
+        <item name="android:textColorPrimary">@color/app_white</item>
+    </style>
+
+    <style name="RegistrationButton" parent="Widget.MaterialComponents.Button.UnelevatedButton">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">54dp</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:letterSpacing" tools:targetApi="lollipop">0.09</item>
+        <item name="android:lineSpacingExtra">3dp</item>
+        <item name="android:textColor">@color/app_white</item>
+        <item name="android:textSize">@dimen/text_size_round_button</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:gravity">center</item>
+        <item name="cornerRadius">@dimen/default_corner_radius</item>
+    </style>
+
+    <style name="CardInfoEditTextInput" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="android:textColor">@color/colorPrimary</item>
+        <item name="android:colorControlNormal" tools:targetApi="lollipop">@color/colorPrimary
+        </item>
+        <item name="boxStrokeColor">@color/colorPrimary</item>
+        <item name="android:textColorHint">@color/colorPrimary</item>
+    </style>
+
+    <style name="CardInfoEditText" parent="Theme.AppCompat.Light">
+        <item name="android:padding">20dp</item>
+        <item name="android:textSize">@dimen/text_size_field</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:textColor">@color/black</item>
+        <item name="android:letterSpacing" tools:targetApi="lollipop">0.01</item>
+        <item name="android:lineSpacingExtra">9dp</item>
+        <item name="android:colorControlNormal" tools:targetApi="lollipop">
+            @color/colorSecondaryDark
+        </item>
+        <item name="android:colorControlActivated" tools:targetApi="lollipop">
+            @color/colorSecondaryDark
+        </item>
+        <item name="android:textColorHint">@color/colorSecondaryDark</item>
+    </style>
+
+    <style name="CardInfoHintStyle" parent="TextAppearance.Design.Hint">
+        <item name="android:textSize">@dimen/text_size_hint</item>
+        <item name="android:textColor">@color/colorPrimary</item>
+    </style>
+
+    <style name="SearchButton" parent="Widget.MaterialComponents.Button.UnelevatedButton">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">50dp</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:letterSpacing" tools:targetApi="lollipop">0.09</item>
+        <item name="android:lineSpacingExtra">3dp</item>
+        <item name="elevation">10dp</item>
+        <item name="android:textColor">@color/black</item>
+        <item name="android:textSize">@dimen/text_size_hint</item>
+        <item name="android:gravity">center</item>
+        <item name="cornerRadius">@dimen/default_corner_radius</item>
+    </style>
+
+    <style name="Redesign.Button.TextButton" parent="Widget.MaterialComponents.Button.TextButton">
+        <item name="android:letterSpacing" tools:targetApi="lollipop">0.0357</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textColor">@color/black</item>
+        <item name="android:textSize">14dp</item>
+        <item name="cornerRadius">22dp</item>
+    </style>
+
+    <style name="AppTheme.Picker" parent="Theme.AppCompat.Light.NoActionBar" >
+        <item name="android:textColorPrimary">@color/black</item>
+    </style>
+
+</resources>
