@@ -1,0 +1,27 @@
+<resources>
+    <string name="app_name">AndroidNavigatorLETI</string>
+    <string name="title_activity_maps">Карта</string>
+    <string name="settings">Настройки</string>
+    <string name="about">О программе</string>
+    <string name="about_text">Наше приложение - самое лучшее приложение!</string>
+    <string name="geolocation">Геолокация</string>
+    <string name="save_search_history">Сохранение истории поиска</string>
+    <string name="register">Зарегистрироваться</string>
+    <string name="approve">Подтвердить</string>
+    <string name="user_not_registered_title">Вы еще не зарегистрированы!</string>
+    <string name="user_not_registered_text">Зарегистрируйтесь, чтобы просматривать историю поиска</string>
+    <string name="name_hint">Имя</string>
+    <string name="surname_hint">Фамилия</string>
+    <string name="birthday_hint">Дата рождения</string>
+    <string name="no_history_items">Список пуст</string>
+    <string name="make_search">Поиск</string>
+    <string name="from">Откуда</string>
+    <string name="where">Куда</string>
+    <string name="root_on_map">Маршрут</string>
+    <string name="show_on_map">Указать на карте</string>
+    <string name="my_location">Мое местоположение</string>
+    <string name="choose">Выбрать</string>
+    <string name="input_error">Пожалуйста, заполните все поля</string>
+    <string name="action_cancel">Отмена</string>
+    <string name="ok">ОК</string>
+</resources>
