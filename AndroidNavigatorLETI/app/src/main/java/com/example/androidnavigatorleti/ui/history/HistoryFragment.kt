@@ -4,12 +4,20 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
 import com.example.androidnavigatorleti.R
 import com.example.androidnavigatorleti.base.BaseFragment
 import com.example.androidnavigatorleti.preferences.SharedPreferencesManager.Keys.NAME
+import com.example.androidnavigatorleti.ui.adapters.HistoryRecyclerAdapter
+import kotlinx.android.synthetic.main.fragment_history.*
 
 class HistoryFragment : BaseFragment() {
+
+    private val historyRecyclerAdapter by lazy {
+        HistoryRecyclerAdapter(
+            nextClick = ::onNextClick,
+            deleteClick = ::onDeleteClick
+        )
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -24,7 +32,24 @@ class HistoryFragment : BaseFragment() {
         if (prefsManager.getString(NAME, "").isEmpty()) {
             openFragment(R.id.unregistered)
         } else {
+            with(recyclerView) {
+                val data = listOf("ANDDROID", "NAVIGATOR", "LETI")
 
+                hasFixedSize()
+                layoutManager = androidx.recyclerview.widget.LinearLayoutManager(
+                    context,
+                    androidx.recyclerview.widget.LinearLayoutManager.VERTICAL,
+                    false
+                )
+
+                adapter = historyRecyclerAdapter.apply {
+                    setTitleData(data)
+                }
+            }
         }
     }
+
+    private fun onNextClick() = openFragment(R.id.search)
+
+    private fun onDeleteClick() {}
 }
