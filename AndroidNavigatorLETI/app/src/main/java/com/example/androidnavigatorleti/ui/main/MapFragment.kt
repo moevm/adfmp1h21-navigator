@@ -32,19 +32,13 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
         private const val ZOOM_SPEED = 400
         private const val DEFAULT_USER_LATITUDE = 30.315492
         private const val DEFAULT_USER_LONGITUDE = 59.939007
-        const val GOOGLE_PACKAGE = "com.google.android.apps.maps"
-        const val GOOGLE_ERROR_TOAST = "Google map app isn't available"
-        const val SHARING_INTENT_TYPE = "text/plain"
     }
 
     private var map: GoogleMap? = null
 
     private var permissionGranted = false
 
-    private var initMapJob: Job? = null
-    private var loadPlacesJob: Job? = null
     private var locationJob: Job? = null
-    private var placeRulesJob: Job? = null
 
     private lateinit var mFusedLocationClient: FusedLocationProviderClient
 
