@@ -21,8 +21,8 @@ class RegistrationFragment : BaseFragment() {
     companion object {
 
         const val DATE_FORMAT = "dd.MM.yyyy"
-        private const val BIRTHDAY_MIN_AGE = 85
-        private const val BIRTHDAY_MAX_AGE = 18
+        const val BIRTHDAY_MIN_AGE = 85
+        const val BIRTHDAY_MAX_AGE = 18
     }
 
     private var errorFlag = false
