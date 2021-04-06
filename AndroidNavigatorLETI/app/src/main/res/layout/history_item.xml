@@ -12,13 +12,13 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="horizontal">
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp">
 
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/del"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
             android:src="@drawable/ic_close"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintHorizontal_bias="0.1"
@@ -42,15 +42,14 @@
 
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/next"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:src="@drawable/ic_forward"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintHorizontal_bias="0.9"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_forward" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

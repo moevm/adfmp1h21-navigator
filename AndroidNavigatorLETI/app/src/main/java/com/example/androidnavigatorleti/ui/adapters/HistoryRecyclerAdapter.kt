@@ -14,7 +14,7 @@ class HistoryRecyclerAdapter(private val nextClick: () -> Unit, private val dele
 
     override fun getItemCount(): Int = items.size
 
-    fun setTitleData(newList    : List<String>) {
+    fun setTitleData(newList: List<String>) {
         items.clear()
 
         if (newList.isNotEmpty()) {
