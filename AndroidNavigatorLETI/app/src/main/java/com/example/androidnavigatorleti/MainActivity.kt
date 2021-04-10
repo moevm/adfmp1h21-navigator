@@ -6,11 +6,15 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
+import androidx.room.Room
+import com.example.androidnavigatorleti.data.UserDatabase
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.android.synthetic.main.activity_main.*
 
 
 class MainActivity : AppCompatActivity() {
+
+    lateinit var db: UserDatabase
 
     // Слушатель реагирующий на смену destination в графе
     private val onDestinationChangedListener = NavController.OnDestinationChangedListener { _, destination, _ ->
@@ -33,6 +37,11 @@ class MainActivity : AppCompatActivity() {
 
         // При переходе по графу дергается этот listener
         navController.addOnDestinationChangedListener(onDestinationChangedListener)
+
+        db = Room.databaseBuilder(
+            applicationContext,
+            UserDatabase::class.java, "androidnavigatorleti"
+        ).build()
     }
 
 

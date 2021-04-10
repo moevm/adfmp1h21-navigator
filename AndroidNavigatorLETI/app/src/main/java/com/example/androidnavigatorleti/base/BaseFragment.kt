@@ -1,7 +1,5 @@
 package com.example.androidnavigatorleti.base
 
-import android.content.Context
-import android.location.LocationManager
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavDirections
@@ -38,7 +36,4 @@ open class BaseFragment : Fragment() {
     }
 
     fun checkJob(job: Job?) = job == null || job.isCompleted
-
-    fun getLocationManager() = requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager
-
 }

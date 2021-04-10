@@ -1,10 +1,10 @@
 package com.example.androidnavigatorleti.ui.main
 
+import android.content.Context
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,14 +14,15 @@ import com.example.androidnavigatorleti.base.BaseFragment
 import com.example.androidnavigatorleti.data.UserLocation
 import com.example.androidnavigatorleti.preferences.SharedPreferencesManager.Keys.LAT_KEY
 import com.example.androidnavigatorleti.preferences.SharedPreferencesManager.Keys.LNG_KEY
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.LatLng
+import com.example.androidnavigatorleti.R
 import kotlinx.android.synthetic.main.fragment_map.*
 import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext
+
 
 class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
 
@@ -37,10 +38,13 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
     private var map: GoogleMap? = null
 
     private var permissionGranted = false
+    private lateinit var lm: LocationManager
 
     private var locationJob: Job? = null
 
     private lateinit var mFusedLocationClient: FusedLocationProviderClient
+    private lateinit var locationRequest: LocationRequest
+    private lateinit var locationCallback: LocationCallback
 
     val args: MapFragmentArgs by navArgs()
 
@@ -52,7 +56,12 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        permissionGranted = requireContext().checkLocationAndForegroundServicePermissions()
+        permissionGranted = requireContext().checkLocationPermission()
+
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
+
+        lm = requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager
+
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =
@@ -61,8 +70,11 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+
         map_view.onCreate(savedInstanceState)
         showMap()
+
+        if (permissionGranted) startLocationUpdates()
 
         if (args.makeRoot) {
             close_floating_button.visibility = View.VISIBLE
@@ -118,9 +130,10 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         when (requestCode) {
             PERMISSION_REQUEST_CODE -> {
-                permissionGranted = checkLocationAndForegroundServicePermissions()
+                permissionGranted = requireContext().checkLocationPermission()
 
                 if (permissionGranted) {
+                    startLocationUpdates()
                     map?.isMyLocationEnabled = true
                 }
 
@@ -130,8 +143,39 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
     }
 
     override fun onLocationChanged(p0: Location) {
-        val newLocation = UserLocation(p0.latitude, p0.longitude)
+        val newLocation = UserLocation(0, p0.latitude, p0.longitude)
         saveUserLocation(newLocation)
+    }
+
+    private fun buildLocationRequest() {
+        locationRequest = LocationRequest()
+        locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        locationRequest.interval = 100
+        locationRequest.fastestInterval = 100
+        locationRequest.smallestDisplacement = 1f
+    }
+
+    private fun startLocationUpdates() {
+        buildLocationRequest()
+        buildLocationCallBack()
+
+        mFusedLocationClient.requestLocationUpdates(
+            locationRequest,
+            locationCallback,
+            null
+        )
+    }
+
+    //Build the location callback object and obtain the location results //as demonstrated below:
+    private fun buildLocationCallBack() {
+        locationCallback = object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult) {
+                for (location in locationResult.locations) {
+                    val latitude = location.latitude.toString()
+                    val longitude = location.longitude.toString()
+                }
+            }
+        }
     }
 
     fun showMap() {
@@ -154,7 +198,7 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
                 map?.isMyLocationEnabled = true
                 //getDeviceLocation(permissionGranted)
             } else {
-                requestLocationAndForegroundServicePermissions()
+                requestLocationPermissions()
             }
         }
     }
@@ -169,7 +213,7 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
                         mFusedLocationClient.lastLocation.addOnCompleteListener { task ->
                             val lastLocation = task.result
                             if (lastLocation != null) {
-                                showLocation(UserLocation(lastLocation.latitude, lastLocation.longitude), permissionIsGranted)
+                                showLocation(UserLocation(lat = lastLocation.latitude, lng = lastLocation.longitude), permissionIsGranted)
                             } else {
                                 showLocation(getDefaultUserLocation(), permissionIsGranted)
                             }
@@ -190,19 +234,20 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
     }
 
     private fun getCurrentLocation() = try {
-        getLocationManager().requestLocationUpdates(LocationManager.GPS_PROVIDER, 0L, 0f, this)
-        getLocationManager().requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0L, 0f, this)
+        lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0L, 0f, this)
+        lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0L, 0f, this)
     } catch (e: SecurityException) {
         getUserLocation()
     }
 
     private fun getUserLocation(): UserLocation? =
             UserLocation(
-                    prefsManager.getDouble(LAT_KEY, -1.0),
-                    prefsManager.getDouble(LNG_KEY, -1.0)
+                    lat = prefsManager.getDouble(LAT_KEY, -1.0),
+                    lng = prefsManager.getDouble(LNG_KEY, -1.0)
             )
 
     private fun saveUserLocation(location: UserLocation) {
+        NavigatorApp.userDao.updateLocation(location)
         prefsManager.putDouble(LAT_KEY, location.lat)
         prefsManager.putDouble(LNG_KEY, location.lng)
     }
@@ -212,8 +257,7 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
             permissionIsGranted: Boolean,
             resetZoom: Boolean = true
     ) {
-        if (location != null && permissionIsGranted
-                && getLocationManager().isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+        if (location != null && permissionIsGranted && lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
             showDeviceLocation(location, resetZoom)
         } else {
             getDefaultDeviceLocation()
@@ -221,12 +265,12 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
     }
 
     private fun getDefaultDeviceLocation() {
-        val defaultLatLng = UserLocation(DEFAULT_USER_LATITUDE, DEFAULT_USER_LONGITUDE)
-        showDeviceLocation(UserLocation(defaultLatLng.lat, defaultLatLng.lng), true)
+        val defaultLatLng = UserLocation(lat = DEFAULT_USER_LATITUDE, lng = DEFAULT_USER_LONGITUDE)
+        showDeviceLocation(UserLocation(lat = defaultLatLng.lat, lng = defaultLatLng.lng), true)
     }
 
     private fun getDefaultUserLocation(): UserLocation? =
-            UserLocation(DEFAULT_USER_LATITUDE, DEFAULT_USER_LONGITUDE)
+            UserLocation(lat = DEFAULT_USER_LATITUDE, lng = DEFAULT_USER_LONGITUDE)
 
     private fun showDeviceLocation(location: UserLocation?, resetZoom: Boolean) {
         map?.animateCamera(

@@ -27,14 +27,11 @@ fun Context.checkForegroundServicePermission(): Boolean =
         true
     }
 
-fun Fragment.requestLocationAndForegroundServicePermissions() {
+fun Fragment.requestLocationPermissions() {
     val permissions: MutableList<String> = mutableListOf(
         Manifest.permission.ACCESS_FINE_LOCATION,
         Manifest.permission.ACCESS_COARSE_LOCATION
     )
-
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
-        permissions.add(Manifest.permission.FOREGROUND_SERVICE)
 
     if (activity != null && isAdded) {
         requestPermissions(permissions.toTypedArray(), PERMISSION_REQUEST_CODE)
