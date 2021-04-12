@@ -9,6 +9,7 @@ class NavigatorApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+
         db = Room.databaseBuilder(
             baseContext,
             UserDatabase::class.java,

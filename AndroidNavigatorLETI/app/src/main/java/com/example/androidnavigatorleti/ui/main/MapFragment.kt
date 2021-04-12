@@ -106,7 +106,10 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
         super.onResume()
 
         map_view.onResume()
-        //my_location_floating_button.setOnClickListener { getDeviceLocation(permissionGranted) }
+        my_location_floating_button.setOnClickListener {
+            val newLocation = NavigatorApp.userDao.getLocation()
+            showLocation(newLocation, permissionGranted, true)
+        }
     }
 
     override fun onPause() {
@@ -171,8 +174,9 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
                 for (location in locationResult.locations) {
-                    val latitude = location.latitude.toString()
-                    val longitude = location.longitude.toString()
+                    val latitude = location.latitude
+                    val longitude = location.longitude
+                    saveUserLocation(UserLocation(lat = latitude, lng = longitude))
                 }
             }
         }
@@ -247,7 +251,7 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
             )
 
     private fun saveUserLocation(location: UserLocation) {
-        NavigatorApp.userDao.updateLocation(location)
+        NavigatorApp.userDao.insertLocation(location)
         prefsManager.putDouble(LAT_KEY, location.lat)
         prefsManager.putDouble(LNG_KEY, location.lng)
     }
