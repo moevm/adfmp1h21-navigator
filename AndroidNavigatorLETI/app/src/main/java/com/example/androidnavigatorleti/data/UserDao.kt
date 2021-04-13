@@ -28,4 +28,10 @@ interface UserDao {
 
     @Delete
     fun deleteLocation(location: UserLocation)
+
+    @Query("SELECT * FROM SearchHistoryItem")
+    fun getSearchHistory(): List<SearchHistoryItem>
+
+    @Insert
+    fun addSearchHistoryItem(vararg item: SearchHistoryItem)
 }

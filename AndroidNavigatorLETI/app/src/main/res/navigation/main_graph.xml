@@ -12,14 +12,70 @@
         tools:layout="@layout/fragment_map">
 
         <argument
-            android:name="setMarker"
+            android:name="setFirstMarker"
             android:defaultValue="false"
             app:argType="boolean" />
+
+        <argument
+            android:name="setSecondMarker"
+            android:defaultValue="false"
+            app:argType="boolean" />
+
+        <argument
+            android:name="secondMarker"
+            android:defaultValue="@null"
+            app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
+            app:nullable="true" />
 
         <argument
             android:name="makeRoot"
             android:defaultValue="false"
             app:argType="boolean" />
+
+        <action
+            android:id="@+id/action_first_marker_set"
+            app:destination="@+id/search"
+            app:popUpTo="@id/main">
+
+            <argument
+                android:name="firstMarker"
+                android:defaultValue="@null"
+                app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
+                app:nullable="true" />
+
+        </action>
+
+        <action
+            android:id="@+id/action_all_markers_set"
+            app:destination="@+id/search"
+            app:popUpTo="@id/main">
+
+            <argument
+                android:name="firstMarker"
+                android:defaultValue="@null"
+                app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
+                app:nullable="true" />
+
+            <argument
+                android:name="secondMarker"
+                android:defaultValue="@null"
+                app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
+                app:nullable="true" />
+
+        </action>
+
+        <action
+            android:id="@+id/action_map_long_click"
+            app:destination="@+id/search"
+            app:popUpTo="@id/main">
+
+            <argument
+                android:name="point"
+                android:defaultValue="@null"
+                app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
+                app:nullable="true" />
+
+        </action>
 
     </fragment>
 
@@ -29,15 +85,50 @@
         android:label="Search"
         tools:layout="@layout/fragment_search">
 
+        <argument
+            android:name="point"
+            android:defaultValue="@null"
+            app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
+            app:nullable="true" />
+
+        <argument
+            android:name="firstMarker"
+            android:defaultValue="@null"
+            app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
+            app:nullable="true" />
+
+        <argument
+            android:name="secondMarker"
+            android:defaultValue="@null"
+            app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
+            app:nullable="true" />
+
         <action
-            android:id="@+id/action_set_marker"
+            android:id="@+id/action_set_first_marker"
             app:destination="@id/main"
             app:popUpTo="@id/search">
 
             <argument
-                android:name="setMarker"
+                android:name="setFirstMarker"
                 android:defaultValue="false"
                 app:argType="boolean" />
+        </action>
+
+        <action
+            android:id="@+id/action_set_second_marker"
+            app:destination="@id/main"
+            app:popUpTo="@id/search">
+
+            <argument
+                android:name="setSecondMarker"
+                android:defaultValue="false"
+                app:argType="boolean" />
+
+            <argument
+                android:name="secondMarker"
+                android:defaultValue="@null"
+                app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
+                app:nullable="true" />
         </action>
 
         <action

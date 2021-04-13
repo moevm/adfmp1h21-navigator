@@ -4,9 +4,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import com.example.androidnavigatorleti.NavigatorApp
 import com.example.androidnavigatorleti.R
 import com.example.androidnavigatorleti.base.BaseFragment
-import com.example.androidnavigatorleti.preferences.SharedPreferencesManager.Keys.NAME
 import com.example.androidnavigatorleti.ui.adapters.HistoryRecyclerAdapter
 import kotlinx.android.synthetic.main.fragment_history.*
 
@@ -29,11 +29,11 @@ class HistoryFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        if (prefsManager.getString(NAME, "").isEmpty()) {
+        if (NavigatorApp.userDao.getUser().name.isNullOrEmpty()) {
             openFragment(R.id.unregistered)
         } else {
             with(recyclerView) {
-                val data = listOf("ANDDROID", "NAVIGATOR", "LETI")
+                val data = NavigatorApp.userDao.getSearchHistory()
 
                 hasFixedSize()
                 layoutManager = androidx.recyclerview.widget.LinearLayoutManager(

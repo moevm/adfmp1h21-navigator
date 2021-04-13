@@ -7,8 +7,10 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.Toast
 import androidx.fragment.app.FragmentManager
+import com.example.androidnavigatorleti.NavigatorApp
 import com.example.androidnavigatorleti.R
 import com.example.androidnavigatorleti.base.BaseFragment
+import com.example.androidnavigatorleti.data.UserInfo
 import com.example.androidnavigatorleti.preferences.SharedPreferencesManager.Keys.BIRTH_DATE
 import com.example.androidnavigatorleti.preferences.SharedPreferencesManager.Keys.NAME
 import com.example.androidnavigatorleti.preferences.SharedPreferencesManager.Keys.SURNAME
@@ -56,9 +58,12 @@ class RegistrationFragment : BaseFragment() {
             for(i in fieldList) { checkIfTextFieldEmptyAndMakeToast(i) }
 
             if (!errorFlag) {
-                prefsManager.putString(NAME, name_text.text.toString())
-                prefsManager.putString(SURNAME, surname_text.text.toString())
-                prefsManager.putString(BIRTH_DATE, birthday_text.text.toString())
+                NavigatorApp.userDao.insertUser(
+                    UserInfo(
+                        name = name_text.toString(),
+                        surname = surname_text.toString(),
+                        birthday = birthday_text.toString()
+                ))
                 openFragment(R.id.history)
             }
         }

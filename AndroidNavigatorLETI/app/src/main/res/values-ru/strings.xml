@@ -19,9 +19,10 @@
     <string name="where">Куда</string>
     <string name="root_on_map">Маршрут</string>
     <string name="show_on_map">Указать на карте</string>
-    <string name="my_location">Мое местоположение</string>
+    <string name="my_location">Где я?</string>
     <string name="choose">Выбрать</string>
     <string name="input_error">Пожалуйста, заполните все поля</string>
     <string name="action_cancel">Отмена</string>
     <string name="ok">ОК</string>
+    <string name="enter_another_address">Введите другой адрес</string>
 </resources>
