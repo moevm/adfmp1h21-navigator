@@ -72,9 +72,9 @@ class SearchFragment : BaseFragment() {
                 } else {
                     geocoder.getFromLocationName(after_search_layout.query.toString(), 1).getOrNull(0)?.let {
                         openFragment(SearchFragmentDirections.actionSetFirstMarkerWithSecondMarker(
-                            true,
-                            true,
-                            ParcelUserLocation(it.latitude, it.longitude)
+                            setFirstMarkerWithSecond = true,
+                            setSecondMarker = true,
+                            secondMarker = ParcelUserLocation(it.latitude, it.longitude)
                         ))
                     } ?: Toast.makeText(requireContext(), getString(R.string.enter_another_address), Toast.LENGTH_SHORT).show()
                 }
