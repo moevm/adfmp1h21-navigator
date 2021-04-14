@@ -92,6 +92,11 @@
         tools:layout="@layout/fragment_search">
 
         <argument
+            android:name="queryName"
+            android:defaultValue=""
+            app:argType="string" />
+
+        <argument
             android:name="point"
             android:defaultValue="@null"
             app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
@@ -166,7 +171,21 @@
         android:id="@+id/history"
         android:name="com.example.androidnavigatorleti.ui.history.HistoryFragment"
         android:label="History"
-        tools:layout="@layout/fragment_history" />
+        tools:layout="@layout/fragment_history">
+
+        <action
+            android:id="@+id/action_refresh_search"
+            app:destination="@+id/search"
+            app:popUpTo="@id/main">
+
+            <argument
+                android:name="queryName"
+                android:defaultValue=""
+                app:argType="string" />
+
+        </action>
+
+    </fragment>
 
     <fragment
         android:id="@+id/menu_navigation_view"

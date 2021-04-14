@@ -7,17 +7,18 @@ import kotlinx.android.synthetic.main.history_item.view.*
 class HistoryViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
     fun bind(
-        item: String,
-        nextClick: () -> Unit,
-        deleteClick: () -> Unit
+        item: String?,
+        position: Int,
+        nextClick: (position: Int) -> Unit,
+        deleteClick: (position: Int) -> Unit
     ) {
         with(itemView) {
             isClickable = true
             isFocusable = true
 
-            next.setOnClickListener { nextClick.invoke() }
-            del.setOnClickListener { deleteClick.invoke() }
-            address.text = item
+            next.setOnClickListener { nextClick.invoke(position) }
+            del.setOnClickListener { deleteClick.invoke(position) }
+            address.text = item ?: ""
         }
     }
 }

@@ -2,7 +2,6 @@ package com.example.androidnavigatorleti.ui.search
 
 import android.location.Geocoder
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -33,6 +32,10 @@ class SearchFragment : BaseFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val geocoder = Geocoder(requireActivity())
+
+        if (args.queryName.isNotEmpty()) {
+            after_search_layout.setQuery(args.queryName, true)
+        }
 
         if (args.point != null) {
             val userLoc = NavigatorApp.userDao.getLocation()
@@ -77,13 +80,19 @@ class SearchFragment : BaseFragment() {
 
         make_root_button.setOnClickListener {
             if (prefsManager.getBoolean(HISTORY_ENABLED, false)) {
-                NavigatorApp.userDao.addSearchHistoryItem(SearchHistoryItem(place = after_search_layout.query.toString()))
+                val list = NavigatorApp.userDao.getSearchHistory()
+                var writeNewVal = true
+                list.forEach {
+                    if (it.place == after_search_layout.query) {
+                        writeNewVal = false
+                    }
+                }
+                if (writeNewVal) {
+                    NavigatorApp.userDao.addSearchHistoryItem(SearchHistoryItem(place = after_search_layout.query.toString()))
+                }
             }
             val firstLoc = geocoder.getFromLocationName(before_search_layout.query.toString(), 1).getOrNull(0)
             val secondLoc = geocoder.getFromLocationName(after_search_layout.query.toString(), 1).getOrNull(0)
-
-            Log.d("HIHI", firstLoc.toString())
-            Log.d("HIHI", secondLoc.toString())
 
             val direction = SearchFragmentDirections.actionMakeRoot(
                 true,

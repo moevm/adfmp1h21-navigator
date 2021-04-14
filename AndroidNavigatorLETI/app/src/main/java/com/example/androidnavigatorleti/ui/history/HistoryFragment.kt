@@ -29,27 +29,46 @@ class HistoryFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        if (NavigatorApp.userDao.getUser().name.isNullOrEmpty()) {
+        if (NavigatorApp.userDao.getUser() == null) {
             openFragment(R.id.unregistered)
         } else {
             with(recyclerView) {
-                val data = NavigatorApp.userDao.getSearchHistory()
+                NavigatorApp.userDao.getSearchHistory().let { data ->
+                    if (data.isEmpty()) {
+                        no_items_text?.visibility = View.VISIBLE
+                    } else {
+                        no_items_text?.visibility = View.GONE
+                        hasFixedSize()
+                        layoutManager = androidx.recyclerview.widget.LinearLayoutManager(
+                            context,
+                            androidx.recyclerview.widget.LinearLayoutManager.VERTICAL,
+                            false
+                        )
 
-                hasFixedSize()
-                layoutManager = androidx.recyclerview.widget.LinearLayoutManager(
-                    context,
-                    androidx.recyclerview.widget.LinearLayoutManager.VERTICAL,
-                    false
-                )
-
-                adapter = historyRecyclerAdapter.apply {
-                    setTitleData(data)
+                        adapter = historyRecyclerAdapter.apply {
+                            setTitleData(data)
+                        }
+                    }
                 }
             }
         }
     }
 
-    private fun onNextClick() = openFragment(R.id.search)
+    private fun onNextClick(position: Int) {
+        val direction = HistoryFragmentDirections.actionRefreshSearch(historyRecyclerAdapter.getItemTitle(position) ?: "")
+        openFragment(direction)
+    }
 
-    private fun onDeleteClick() {}
+    private fun onDeleteClick(position: Int) {
+        with(NavigatorApp.userDao) {
+            with(historyRecyclerAdapter) {
+                val list = getSearchHistory()
+                list.forEach {
+                    if (it.place == getItemTitle(position) ?: "") deleteSearchHistoryItem(it)
+                }
+                deleteItemFromList(position)
+                if (itemCount == 0) no_items_text?.visibility = View.VISIBLE
+            }
+        }
+    }
 }

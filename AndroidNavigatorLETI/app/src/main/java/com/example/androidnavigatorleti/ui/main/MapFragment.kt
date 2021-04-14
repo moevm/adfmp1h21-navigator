@@ -26,11 +26,13 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.*
 import com.google.maps.DirectionsApi
 import com.google.maps.GeoApiContext
+import com.google.maps.android.SphericalUtil
 import com.google.maps.model.DirectionsResult
 import kotlinx.android.synthetic.main.fragment_map.*
 import kotlinx.coroutines.*
 import java.io.IOException
 import kotlin.coroutines.CoroutineContext
+import kotlin.math.floor
 
 
 class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
@@ -187,8 +189,6 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
                     startLocationUpdates()
                     map?.isMyLocationEnabled = true
                 }
-
-                //getDeviceLocation(permissionGranted)
             }
         }
     }
@@ -200,16 +200,17 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
 
     private suspend fun makePolyline() {
         //Получаем контекст для запросов, mapsApiKey хранит в себе String с ключом для карт
-
         val geoApiContext = GeoApiContext().setApiKey(getString(R.string.google_maps_key))
 
         //Здесь будет наш итоговый путь состоящий из набора точек
         var result: DirectionsResult? = null
+        val startPoint = com.google.maps.model.LatLng(args.firstMarker!!.lat, args.firstMarker!!.lng)
+        val endPoint = com.google.maps.model.LatLng(args.secondMarker!!.lat, args.secondMarker!!.lng)
 
         try {
             result = DirectionsApi.newRequest(geoApiContext)
-                .origin(com.google.maps.model.LatLng(args.firstMarker!!.lat, args.firstMarker!!.lng))
-                .destination(com.google.maps.model.LatLng(args.secondMarker!!.lat, args.secondMarker!!.lng))
+                .origin(startPoint)
+                .destination(endPoint)
                 .await()
         } catch (e: ApiException) {
             e.printStackTrace()
@@ -241,6 +242,24 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
         withContext(Dispatchers.Main) {
             polyLine = map?.addPolyline(line)
             showDoubleBlockedMarkers()
+            route_time?.text = countDistance(startPoint, endPoint)
+        }
+    }
+
+    private fun countDistance(startPoint: com.google.maps.model.LatLng, endPoint: com.google.maps.model.LatLng): String {
+        val distance = SphericalUtil.computeDistanceBetween(
+            LatLng(startPoint.lat, startPoint.lng),
+            LatLng(endPoint.lat, endPoint.lng)
+        )
+
+        val time = floor(distance / 1000 * 2.5).toInt()
+
+        return if (time >= 60) {
+            val hours = time / 60
+            val minutes = time % 60
+            getString(R.string.route_time_text_hours, hours.toString(), minutes.toString())
+        } else {
+            getString(R.string.route_time_text_min, time.toString())
         }
     }
 
@@ -276,7 +295,7 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
         }
     }
 
-    fun showMap() {
+    private fun showMap() {
         map_view.getMapAsync { googleMap ->
             map = googleMap.apply {
                 //Show user location with delay

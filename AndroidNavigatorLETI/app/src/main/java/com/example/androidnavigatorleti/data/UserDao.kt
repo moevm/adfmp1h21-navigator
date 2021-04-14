@@ -6,7 +6,7 @@ import androidx.room.*
 interface UserDao {
 
     @Query("SELECT * FROM UserInfo")
-    fun getUser(): UserInfo
+    fun getUser(): UserInfo?
 
     @Insert
     fun insertUser(vararg user: UserInfo)
@@ -34,4 +34,10 @@ interface UserDao {
 
     @Insert
     fun addSearchHistoryItem(vararg item: SearchHistoryItem)
+
+    @Delete
+    fun deleteSearchHistoryItem(item: SearchHistoryItem)
+
+    @Query("SELECT id FROM SearchHistoryItem WHERE place_name = (:place_name)")
+    fun getSearchHistoryItemId(place_name: String) : Int
 }

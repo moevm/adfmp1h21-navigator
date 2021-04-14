@@ -26,6 +26,8 @@
     <string name="ok">OK</string>
     <string name="city_delimiter" translatable="false">, Санкт-Петербург</string>
     <string name="enter_another_address">Enter another address</string>
+    <string name="route_time_text_min">~ %s min</string>
+    <string name="route_time_text_hours">~ %s hours %s min</string>
 
     <string-array name="months_array">
         <item>January</item>
