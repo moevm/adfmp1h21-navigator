@@ -1,7 +1,6 @@
 package com.example.androidnavigatorleti.ui.main
 
 import android.content.Context
-import android.location.Geocoder
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
@@ -119,11 +118,16 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
             }
             choose_button.setOnClickListener {
                 val markerLocation: LatLng? = firstMarker?.position
-                val direction = MapFragmentDirections.actionFirstMarkerSet(ParcelUserLocation(
-                    markerLocation!!.latitude,
-                    markerLocation.longitude
-                ))
-                openFragment(direction)
+
+                if (markerLocation != null) {
+                    val direction = MapFragmentDirections.actionFirstMarkerSet(
+                        ParcelUserLocation(
+                            markerLocation.latitude,
+                            markerLocation.longitude
+                        )
+                    )
+                    openFragment(direction)
+                }
             }
         }
 
@@ -137,10 +141,18 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
             choose_button.setOnClickListener {
                 val firstMarkerLocation: LatLng? = firstMarker?.position
                 val secondMarkerLocation: LatLng? = secondMarker?.position
-                val direction = MapFragmentDirections.actionAllMarkersSet(
-                    ParcelUserLocation(firstMarkerLocation!!.latitude, firstMarkerLocation.longitude),
-                    ParcelUserLocation(secondMarkerLocation!!.latitude, secondMarkerLocation.longitude)
-                )
+
+                val firstParcelUserLoc = firstMarkerLocation?.let {
+                    ParcelUserLocation(it.latitude, it.longitude)
+                }
+                val secondParcelUserLoc = secondMarkerLocation?.let {
+                    ParcelUserLocation(it.latitude, it.longitude)
+                }
+                val direction = if (args.setFirstMarkerWithSecond) {
+                    MapFragmentDirections.actionAllMarkersSet(secondParcelUserLoc, firstParcelUserLoc)
+                } else {
+                    MapFragmentDirections.actionAllMarkersSet(firstParcelUserLoc, secondParcelUserLoc)
+                }
                 openFragment(direction)
             }
         }
@@ -204,8 +216,8 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
 
         //Здесь будет наш итоговый путь состоящий из набора точек
         var result: DirectionsResult? = null
-        val startPoint = com.google.maps.model.LatLng(args.firstMarker!!.lat, args.firstMarker!!.lng)
-        val endPoint = com.google.maps.model.LatLng(args.secondMarker!!.lat, args.secondMarker!!.lng)
+        val startPoint = com.google.maps.model.LatLng(args.firstMarker?.lat ?: 0.0, args.firstMarker?.lng ?: 0.0)
+        val endPoint = com.google.maps.model.LatLng(args.secondMarker?.lat ?: 0.0, args.secondMarker?.lng ?: 0.0)
 
         try {
             result = DirectionsApi.newRequest(geoApiContext)
@@ -221,7 +233,7 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
         }
 
         //Преобразование итогового пути в набор точек
-        val path: MutableList<com.google.maps.model.LatLng>? = result!!.routes[0].overviewPolyline.decodePath()
+        val path: MutableList<com.google.maps.model.LatLng>? = result?.routes?.getOrNull(0)?.overviewPolyline?.decodePath()
         //Линия которую будем рисовать
         val line = PolylineOptions()
 
@@ -311,24 +323,10 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
                     map_view?.visibility = View.VISIBLE
                 }
 
-
-
-                val geocoder = Geocoder(requireActivity())
-
-                //Log.d("HIHI", geocoder.getFromLocationName("21-я лин. В.О., 010Г", 1).toString())
-
                 if (!args.setFirstMarker && !args.setSecondMarker) {
                     setOnMapLongClickListener {
                         val direction = MapFragmentDirections.actionMapLongClick(ParcelUserLocation(it.latitude, it.longitude))
                         openFragment(direction)
-//                    val loc = geocoder.getFromLocation(it.latitude, it.longitude, 1)
-//                    val direction = MapFragmentDirections.actionMapLongClick(loc[0].getAddressLine(0).toString())
-//
-//                    val test = NavigatorApp.userDao.getLocation()
-//                    val res = requestDirection(getRequestedUrl(it, LatLng(test.lat, test.lng)) ?: "")
-//                    Log.d("HIHI", "$res abc")
-
-                        //Log.d("HIHI", geocoder.getFromLocationName(loc[0].getAddressLine(0).toString(), 1).toString())
                     }
                 }
             }
@@ -362,9 +360,11 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
         }
 
         if (args.setSecondMarker) {
-            firstMarker = map?.addMarker(
-                MarkerOptions().position(LatLng(args.secondMarker!!.lat, args.secondMarker!!.lng)).draggable(false)
-            )
+            args.secondMarker?.let {
+                firstMarker = map?.addMarker(
+                    MarkerOptions().position(LatLng(it.lat, it.lng)).draggable(false)
+                )
+            }
 
             secondMarker = map?.addMarker(
                 MarkerOptions()
@@ -386,18 +386,21 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
     }
 
     private fun showDoubleBlockedMarkers() {
-        firstMarker = map?.addMarker(
-            MarkerOptions().
-                position(LatLng(args.firstMarker!!.lat, args.firstMarker!!.lng)).
-                draggable(false)
-        )
+        args.firstMarker?.let {
+            firstMarker = map?.addMarker(
+                MarkerOptions().
+                    position(LatLng(it.lat, it.lng)).draggable(false)
+            )
+        }
 
-        secondMarker = map?.addMarker(
-            MarkerOptions()
-                .position(LatLng(args.secondMarker!!.lat, args.secondMarker!!.lng))
-                .draggable(false)
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
-        )
+        args.secondMarker?.let {
+            secondMarker = map?.addMarker(
+                MarkerOptions()
+                    .position(LatLng(it.lat, it.lng))
+                    .draggable(false)
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
+            )
+        }
     }
 
     private fun removeMarkers() {
@@ -430,7 +433,7 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
 
     private fun showDeviceLocation(location: UserLocation?, resetZoom: Boolean) {
         map?.animateCamera(
-                CameraUpdateFactory.newLatLngZoom(LatLng(location!!.lat, location.lng),
+                CameraUpdateFactory.newLatLngZoom(LatLng(location?.lat ?: 0.0, location?.lng ?: 0.0),
                         if (resetZoom) DEFAULT_ZOOM else map?.cameraPosition?.zoom ?: DEFAULT_ZOOM),
                 ZOOM_SPEED,
                 null)

@@ -22,6 +22,11 @@
             app:argType="boolean" />
 
         <argument
+            android:name="setFirstMarkerWithSecond"
+            android:defaultValue="false"
+            app:argType="boolean" />
+
+        <argument
             android:name="firstMarker"
             android:defaultValue="@null"
             app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
@@ -123,6 +128,23 @@
                 android:name="setFirstMarker"
                 android:defaultValue="false"
                 app:argType="boolean" />
+        </action>
+
+        <action
+            android:id="@+id/action_set_first_marker_with_second_marker"
+            app:destination="@id/main"
+            app:popUpTo="@id/search">
+
+            <argument
+                android:name="setFirstMarkerWithSecond"
+                android:defaultValue="false"
+                app:argType="boolean" />
+
+            <argument
+                android:name="secondMarker"
+                android:defaultValue="@null"
+                app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
+                app:nullable="true" />
         </action>
 
         <action
