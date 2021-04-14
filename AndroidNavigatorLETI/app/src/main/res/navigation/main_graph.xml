@@ -141,6 +141,11 @@
                 app:argType="boolean" />
 
             <argument
+                android:name="setSecondMarker"
+                android:defaultValue="false"
+                app:argType="boolean" />
+
+            <argument
                 android:name="secondMarker"
                 android:defaultValue="@null"
                 app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
