@@ -11,9 +11,6 @@ import com.example.androidnavigatorleti.NavigatorApp
 import com.example.androidnavigatorleti.R
 import com.example.androidnavigatorleti.base.BaseFragment
 import com.example.androidnavigatorleti.data.UserInfo
-import com.example.androidnavigatorleti.preferences.SharedPreferencesManager.Keys.BIRTH_DATE
-import com.example.androidnavigatorleti.preferences.SharedPreferencesManager.Keys.NAME
-import com.example.androidnavigatorleti.preferences.SharedPreferencesManager.Keys.SURNAME
 import kotlinx.android.synthetic.main.fragment_registration.*
 import java.text.SimpleDateFormat
 import java.util.*
