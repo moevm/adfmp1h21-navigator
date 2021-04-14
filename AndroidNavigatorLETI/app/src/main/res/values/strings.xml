@@ -28,6 +28,7 @@
     <string name="enter_another_address">Enter another address</string>
     <string name="route_time_text_min">~ %s min</string>
     <string name="route_time_text_hours">~ %s hours %s min</string>
+    <string name="enable_location">You should enable geo location to use app</string>
 
     <string-array name="months_array">
         <item>January</item>
