@@ -70,7 +70,12 @@ class SearchFragment : BaseFragment() {
                 if (after_search_layout.query.isEmpty()) {
                     openFragment(SearchFragmentDirections.actionSetFirstMarker(true))
                 } else {
-
+                    geocoder.getFromLocationName(after_search_layout.query.toString(), 1).getOrNull(0)?.let {
+                        openFragment(SearchFragmentDirections.actionSetFirstMarkerWithSecondMarker(
+                            true,
+                            ParcelUserLocation(it.latitude, it.longitude)
+                        ))
+                    } ?: Toast.makeText(requireContext(), getString(R.string.enter_another_address), Toast.LENGTH_SHORT).show()
                 }
             } else {
                 geocoder.getFromLocationName(before_search_layout.query.toString(), 1).getOrNull(0)?.let {
