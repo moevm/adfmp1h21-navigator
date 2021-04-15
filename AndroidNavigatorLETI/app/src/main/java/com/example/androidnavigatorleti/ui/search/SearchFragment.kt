@@ -101,18 +101,22 @@ class SearchFragment : BaseFragment() {
                     NavigatorApp.userDao.addSearchHistoryItem(SearchHistoryItem(place = after_search_layout.query.toString()))
                 }
             }
-            val firstLoc = geocoder.getFromLocationName(before_search_layout.query.toString(), 1).getOrNull(0)
-            val secondLoc = geocoder.getFromLocationName(after_search_layout.query.toString(), 1).getOrNull(0)
-
-            if (firstLoc != null && secondLoc != null) {
-                val direction = SearchFragmentDirections.actionMakeRoot(
-                    true,
-                    ParcelUserLocation(firstLoc.latitude, firstLoc.longitude),
-                    ParcelUserLocation(secondLoc.latitude, secondLoc.longitude)
-                )
-                openFragment(direction)
+            if (before_search_layout.query.isNullOrEmpty() || after_search_layout.query.isNullOrEmpty()) {
+                Toast.makeText(requireContext(), getString(R.string.enter_address), Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(requireContext(), getString(R.string.enter_another_address), Toast.LENGTH_SHORT).show()
+                val firstLoc = geocoder.getFromLocationName(before_search_layout.query.toString(), 1).getOrNull(0)
+                val secondLoc = geocoder.getFromLocationName(after_search_layout.query.toString(), 1).getOrNull(0)
+
+                if (firstLoc != null && secondLoc != null) {
+                    val direction = SearchFragmentDirections.actionMakeRoot(
+                        true,
+                        ParcelUserLocation(firstLoc.latitude, firstLoc.longitude),
+                        ParcelUserLocation(secondLoc.latitude, secondLoc.longitude)
+                    )
+                    openFragment(direction)
+                } else {
+                    Toast.makeText(requireContext(), getString(R.string.enter_another_address), Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }

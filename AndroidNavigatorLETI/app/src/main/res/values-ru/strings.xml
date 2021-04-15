@@ -25,6 +25,7 @@
     <string name="action_cancel">Отмена</string>
     <string name="ok">ОК</string>
     <string name="enter_another_address">Введите другой адрес</string>
+    <string name="enter_address">Введите адрес</string>
     <string name="route_time_text_min">~ %s минут</string>
     <string name="route_time_text_hours">~ %s часов %s минут</string>
     <string name="enable_location">Вам следует разрешить геолокацию, чтобы использовать приложение</string>
