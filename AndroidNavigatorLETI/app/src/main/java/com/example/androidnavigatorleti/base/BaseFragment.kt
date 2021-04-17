@@ -4,10 +4,17 @@ import android.os.Bundle
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavDirections
 import androidx.navigation.fragment.findNavController
+import com.example.androidnavigatorleti.data.UserLocation
 import com.example.androidnavigatorleti.preferences.SharedPreferencesManager
 import kotlinx.coroutines.Job
 
 open class BaseFragment : Fragment() {
+
+    companion object {
+
+        const val DEFAULT_USER_LATITUDE = 30.315492
+        const val DEFAULT_USER_LONGITUDE = 59.939007
+    }
 
     protected lateinit var prefsManager: SharedPreferencesManager
 
@@ -36,4 +43,15 @@ open class BaseFragment : Fragment() {
     }
 
     fun checkJob(job: Job?) = job == null || job.isCompleted
+
+    fun setLocation(location: UserLocation) {
+        prefsManager.putDouble(SharedPreferencesManager.Keys.LAT_KEY, location.lat)
+        prefsManager.putDouble(SharedPreferencesManager.Keys.LNG_KEY, location.lng)
+    }
+
+    fun getLocation(): UserLocation {
+        val lat = prefsManager.getDouble(SharedPreferencesManager.Keys.LAT_KEY, DEFAULT_USER_LATITUDE)
+        val lng = prefsManager.getDouble(SharedPreferencesManager.Keys.LNG_KEY, DEFAULT_USER_LONGITUDE)
+        return UserLocation(lat = lat, lng = lng)
+    }
 }

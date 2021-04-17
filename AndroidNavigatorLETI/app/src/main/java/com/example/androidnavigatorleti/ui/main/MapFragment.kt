@@ -44,8 +44,6 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
 
         private const val DEFAULT_ZOOM = 12f
         private const val ZOOM_SPEED = 400
-        private const val DEFAULT_USER_LATITUDE = 30.315492
-        private const val DEFAULT_USER_LONGITUDE = 59.939007
     }
 
     private val args: MapFragmentArgs by navArgs()
@@ -173,7 +171,7 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
 
         map_view.onResume()
         my_location_floating_button.setOnClickListener {
-            val newLocation = NavigatorApp.userDao.getLocation()
+            val newLocation = getLocation()
             showLocation(newLocation, permissionGranted, true)
         }
     }
@@ -370,7 +368,7 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
     }
 
     private fun showMarkerLocation() {
-        val userLoc = NavigatorApp.userDao.getLocation()
+        val userLoc = getLocation()
         showLocation(userLoc, permissionGranted, true)
 
         if (args.setFirstMarker) {
@@ -439,7 +437,7 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
     }
 
     private fun saveUserLocation(location: UserLocation) {
-        NavigatorApp.userDao.insertLocation(location)
+        setLocation(location)
         prefsManager.putDouble(LAT_KEY, location.lat)
         prefsManager.putDouble(LNG_KEY, location.lng)
     }

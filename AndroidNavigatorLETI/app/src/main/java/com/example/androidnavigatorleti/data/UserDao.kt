@@ -17,18 +17,6 @@ interface UserDao {
     @Delete
     fun deleteUser(user: UserInfo)
 
-    @Query("SELECT * FROM UserLocation")
-    fun getLocation(): UserLocation
-
-    @Insert
-    fun insertLocation(vararg location: UserLocation)
-
-    @Update
-    fun updateLocation(vararg location: UserLocation)
-
-    @Delete
-    fun deleteLocation(location: UserLocation)
-
     @Query("SELECT * FROM SearchHistoryItem")
     fun getSearchHistory(): List<SearchHistoryItem>
 

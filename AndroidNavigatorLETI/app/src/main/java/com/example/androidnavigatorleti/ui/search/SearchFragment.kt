@@ -38,7 +38,7 @@ class SearchFragment : BaseFragment() {
         }
 
         args.point?.let {
-            val userLoc = NavigatorApp.userDao.getLocation()
+            val userLoc = getLocation()
             val userLocName = geocoder.getFromLocation(userLoc.lat, userLoc.lng, 1).getOrNull(0)?.getAddressLine(0)
 
             before_search_layout.setQuery(
