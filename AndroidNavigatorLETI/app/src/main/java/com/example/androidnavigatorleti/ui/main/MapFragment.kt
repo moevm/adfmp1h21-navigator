@@ -58,6 +58,7 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
     private var permissionGranted = false
     private var locationJob: Job? = null
     private var polyLine: Polyline? = null
+    private var locButtonClicked = false
 
     private lateinit var lm: LocationManager
     private lateinit var mFusedLocationClient: FusedLocationProviderClient
@@ -116,7 +117,7 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
             my_location_floating_button.visibility = View.GONE
             my_location_button.setOnClickListener {
                 firstMarker?.remove()
-                showMarkerLocation()
+                showMarkerOnMap()
             }
             choose_button.setOnClickListener {
                 val markerLocation: LatLng? = firstMarker?.position
@@ -138,7 +139,7 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
             my_location_floating_button.visibility = View.GONE
             my_location_button.setOnClickListener {
                 secondMarker?.remove()
-                showMarkerLocation()
+                showMarkerOnMap()
             }
             choose_button.setOnClickListener {
                 val firstMarkerLocation: LatLng? = firstMarker?.position
@@ -172,6 +173,7 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
         map_view.onResume()
         my_location_floating_button.setOnClickListener {
             val newLocation = getLocation()
+            locButtonClicked = true
             showLocation(newLocation, permissionGranted, true)
         }
     }
@@ -282,6 +284,7 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
         withContext(Dispatchers.Main) {
             polyLine = map?.addPolyline(line)
             showDoubleBlockedMarkers()
+            showMarkerLocation()
             route_time?.text = countDistance(startPoint, endPoint)
         }
     }
@@ -308,7 +311,7 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
         locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         locationRequest.interval = 100
         locationRequest.fastestInterval = 100
-        locationRequest.smallestDisplacement = 1f
+        locationRequest.smallestDisplacement = 10f
     }
 
     private fun startLocationUpdates() {
@@ -329,7 +332,14 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
                 for (location in locationResult.locations) {
                     val latitude = location.latitude
                     val longitude = location.longitude
-                    saveUserLocation(UserLocation(lat = latitude, lng = longitude))
+                    val oldLoc = getLocation()
+                    val newLoc = UserLocation(lat = latitude, lng = longitude)
+                    if (locButtonClicked && oldLoc.lat != latitude && oldLoc.lng != longitude) {
+                        showLocation(newLoc, permissionGranted, true)
+                    } else {
+                        locButtonClicked = false
+                    }
+                    saveUserLocation(newLoc)
                 }
             }
         }
@@ -340,7 +350,7 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
             map = googleMap.apply {
                 //Show user location with delay
                 Handler(Looper.getMainLooper()).postDelayed(Runnable {
-                    showMarkerLocation()
+                    showMarkerOnMap()
                 },500)
 
                 uiSettings.isMyLocationButtonEnabled = false
@@ -367,9 +377,11 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
         }
     }
 
-    private fun showMarkerLocation() {
+    private fun showMarkerOnMap() {
         val userLoc = getLocation()
-        showLocation(userLoc, permissionGranted, true)
+        if (!args.makeRoot) {
+            showLocation(userLoc, permissionGranted, true)
+        }
 
         if (args.setFirstMarker) {
             firstMarker = map?.addMarker(
@@ -465,5 +477,16 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
                         if (resetZoom) DEFAULT_ZOOM else map?.cameraPosition?.zoom ?: DEFAULT_ZOOM),
                 ZOOM_SPEED,
                 null)
+    }
+
+    private fun showMarkerLocation() {
+        val builder = LatLngBounds.builder().include(firstMarker!!.position).include(secondMarker!!.position)
+        val bounds = builder.build()
+
+        val width = resources.displayMetrics.widthPixels;
+        val height = resources.displayMetrics.heightPixels;
+        val padding = (width * 0.10).toInt(); // offset from edges of the map 10% of screen
+
+        map?.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, width, height, padding))
     }
 }
