@@ -32,7 +32,10 @@ import com.google.maps.GeoApiContext
 import com.google.maps.android.SphericalUtil
 import com.google.maps.model.DirectionsResult
 import kotlinx.android.synthetic.main.fragment_map.*
+import kotlinx.android.synthetic.main.speed_container.view.*
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
 import java.io.IOException
 import kotlin.coroutines.CoroutineContext
 import kotlin.math.floor
@@ -65,7 +68,12 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
     private lateinit var locationRequest: LocationRequest
     private lateinit var locationCallback: LocationCallback
 
+    private val polylinePoints: ArrayList<LatLng> = ArrayList()
+    private val trafficLights: ArrayList<LatLng> = ArrayList()
 
+    private lateinit var currentSpeedFlow: Flow<Int>
+
+    private lateinit var speedFlow: Flow<Pair<Int,Int>>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -159,6 +167,15 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
                 openFragment(direction)
             }
         }
+
+        launch(this.coroutineContext) {
+            withContext(Dispatchers.IO) {
+                currentSpeedFlow.collect {
+                    speed_layout?.current_speed?.setText(it)
+                    delay(1000)
+                }
+            }
+        }
     }
 
     override fun onStart() {
@@ -230,6 +247,31 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
         saveUserLocation(newLocation)
     }
 
+    private fun processTrafficLights() {
+        var lastPoint: LatLng? = null
+        var sum = 0.0
+
+        for (point in polylinePoints) {
+            if (lastPoint == null) {
+                lastPoint = point
+            } else {
+                sum += SphericalUtil.computeDistanceBetween(lastPoint, point)
+                lastPoint = point
+            }
+        }
+    }
+
+    //Cделать 1 проход а не n^2
+    private fun getDistanceWithTrafficLight(start: LatLng, end: LatLng): Double {
+        trafficLights.forEach {
+            if (it.longitude in start.longitude..end.longitude || it.latitude in start.latitude..end.latitude) {
+                return SphericalUtil.computeDistanceBetween(start, it)
+            }
+        }
+
+        return 0.0
+    }
+
     private fun restartApp(action: String? = null) {
         val i = requireContext().packageManager
             .getLaunchIntentForPackage(requireContext().packageName)?.apply {
@@ -272,8 +314,10 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
         //Проходимся по всем точкам, добавляем их в Polyline и в LanLngBounds.Builder
         if (path != null) {
             for (item in path) {
-                line.add(LatLng(item.lat, item.lng))
-                latLngBuilder.include(LatLng(item.lat, item.lng))
+                val point = LatLng(item.lat, item.lng)
+                polylinePoints.add(point)
+                line.add(point)
+                latLngBuilder.include(point)
             }
         }
 

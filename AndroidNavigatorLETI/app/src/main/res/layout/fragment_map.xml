@@ -11,6 +11,15 @@
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
+    <include
+        android:id="@+id/speed_layout"
+        layout="@layout/speed_container"
+        android:layout_width="40dp"
+        android:layout_height="130dp"
+        android:layout_gravity="top|start"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp" />
+
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/search_container"
         android:layout_width="100dp"
