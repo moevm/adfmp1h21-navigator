@@ -72,12 +72,14 @@ class MapViewModel : ViewModel(), CoroutineScope {
                     lastLocation.toLatLng(),
                     newLocation.toLatLng()
                 )
-                delay(1000)
+                trafficLights[0].distance -= SphericalUtil.computeDistanceBetween(
+                        lastLocation.toLatLng(),
+                        newLocation.toLatLng()
+                )
             }
 
             trafficLightFlow.collect {
                 if (it <= 0.0) trafficLights.removeAt(0)
-                delay(1000)
             }
 
             currentSpeedFlow.collect {
@@ -86,7 +88,6 @@ class MapViewModel : ViewModel(), CoroutineScope {
                     newLocation.toLatLng()
                 ).toInt() / 1000 / 3600
                 //speed_layout?.current_speed?.setText(it)
-                delay(1000)
             }
         }
     }

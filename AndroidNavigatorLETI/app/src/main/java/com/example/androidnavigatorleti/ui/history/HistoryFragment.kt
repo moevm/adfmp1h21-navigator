@@ -4,7 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.example.androidnavigatorleti.NavigatorApp
+import androidx.fragment.app.viewModels
 import com.example.androidnavigatorleti.R
 import com.example.androidnavigatorleti.base.BaseFragment
 import com.example.androidnavigatorleti.ui.adapters.HistoryRecyclerAdapter
@@ -19,6 +19,8 @@ class HistoryFragment : BaseFragment() {
         )
     }
 
+    private val viewModel: HistoryViewModel by viewModels()
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -29,11 +31,11 @@ class HistoryFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        if (NavigatorApp.userDao.getUser() == null) {
+        if (viewModel.getUser() == null) {
             openFragment(R.id.unregistered)
         } else {
             with(recyclerView) {
-                NavigatorApp.userDao.getSearchHistory().let { data ->
+                viewModel.getSearchHistory().let { data ->
                     if (data.isEmpty()) {
                         no_items_text?.visibility = View.VISIBLE
                     } else {
@@ -55,16 +57,18 @@ class HistoryFragment : BaseFragment() {
     }
 
     private fun onNextClick(position: Int) {
-        val direction = HistoryFragmentDirections.actionRefreshSearch(historyRecyclerAdapter.getItemTitle(position) ?: "")
+        val direction = HistoryFragmentDirections.actionRefreshSearch(
+            historyRecyclerAdapter.getItemTitle(position) ?: ""
+        )
         openFragment(direction)
     }
 
     private fun onDeleteClick(position: Int) {
-        with(NavigatorApp.userDao) {
+        with(viewModel) {
             with(historyRecyclerAdapter) {
                 val list = getSearchHistory()
                 list.forEach {
-                    if (it.place == getItemTitle(position) ?: "") deleteSearchHistoryItem(it)
+                    if (it.place == getItemTitle(position) ?: "") deleteItem(it)
                 }
                 deleteItemFromList(position)
                 if (itemCount == 0) no_items_text?.visibility = View.VISIBLE

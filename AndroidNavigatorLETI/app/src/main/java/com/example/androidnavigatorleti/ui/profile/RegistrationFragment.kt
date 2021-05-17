@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.Toast
 import androidx.fragment.app.FragmentManager
-import com.example.androidnavigatorleti.NavigatorApp
+import androidx.fragment.app.viewModels
 import com.example.androidnavigatorleti.R
 import com.example.androidnavigatorleti.base.BaseFragment
 import com.example.androidnavigatorleti.data.UserInfo
@@ -23,6 +23,8 @@ class RegistrationFragment : BaseFragment() {
         const val BIRTHDAY_MIN_AGE = 85
         const val BIRTHDAY_MAX_AGE = 18
     }
+
+    private val viewModel: RegistrationVIewModel by viewModels()
 
     private var errorFlag = false
 
@@ -55,7 +57,7 @@ class RegistrationFragment : BaseFragment() {
             for(i in fieldList) { checkIfTextFieldEmptyAndMakeToast(i) }
 
             if (!errorFlag) {
-                NavigatorApp.userDao.insertUser(
+                viewModel.insertUser(
                     UserInfo(
                         name = name_text.toString(),
                         surname = surname_text.toString(),

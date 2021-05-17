@@ -6,8 +6,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
-import com.example.androidnavigatorleti.NavigatorApp
 import com.example.androidnavigatorleti.R
 import com.example.androidnavigatorleti.base.BaseFragment
 import com.example.androidnavigatorleti.data.ParcelUserLocation
@@ -28,6 +28,8 @@ class SearchFragment : BaseFragment() {
         return inflater.inflate(R.layout.fragment_search, container, false)
     }
 
+    private val viewModel: SearchViewModel by viewModels()
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -39,7 +41,8 @@ class SearchFragment : BaseFragment() {
 
         args.point?.let {
             val userLoc = getLocation()
-            val userLocName = geocoder.getFromLocation(userLoc.lat, userLoc.lng, 1).getOrNull(0)?.getAddressLine(0)
+            val userLocName = geocoder.getFromLocation(userLoc.lat, userLoc.lng, 1).getOrNull(0)
+                ?.getAddressLine(0)
 
             before_search_layout.setQuery(
                 userLocName,
@@ -70,27 +73,44 @@ class SearchFragment : BaseFragment() {
                 if (after_search_layout.query.isEmpty()) {
                     openFragment(SearchFragmentDirections.actionSetFirstMarker(true))
                 } else {
-                    geocoder.getFromLocationName(after_search_layout.query.toString(), 1).getOrNull(0)?.let {
-                        openFragment(SearchFragmentDirections.actionSetFirstMarkerWithSecondMarker(
-                            setFirstMarkerWithSecond = true,
-                            setSecondMarker = true,
-                            secondMarker = ParcelUserLocation(it.latitude, it.longitude)
-                        ))
-                    } ?: Toast.makeText(requireContext(), getString(R.string.enter_another_address), Toast.LENGTH_SHORT).show()
+                    geocoder.getFromLocationName(after_search_layout.query.toString(), 1).getOrNull(
+                        0
+                    )?.let {
+                        openFragment(
+                            SearchFragmentDirections.actionSetFirstMarkerWithSecondMarker(
+                                setFirstMarkerWithSecond = true,
+                                setSecondMarker = true,
+                                secondMarker = ParcelUserLocation(it.latitude, it.longitude)
+                            )
+                        )
+                    } ?: Toast.makeText(
+                        requireContext(),
+                        getString(R.string.enter_another_address),
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             } else {
-                geocoder.getFromLocationName(before_search_layout.query.toString(), 1).getOrNull(0)?.let {
-                    openFragment(SearchFragmentDirections.actionSetSecondMarker(
-                        true,
-                        ParcelUserLocation(it.latitude, it.longitude)
-                    ))
-                } ?: Toast.makeText(requireContext(), getString(R.string.enter_another_address), Toast.LENGTH_SHORT).show()
+                geocoder.getFromLocationName(
+                    before_search_layout.query.toString(),
+                    1
+                ).getOrNull(0)?.let {
+                    openFragment(
+                        SearchFragmentDirections.actionSetSecondMarker(
+                            true,
+                            ParcelUserLocation(it.latitude, it.longitude)
+                        )
+                    )
+                } ?: Toast.makeText(
+                    requireContext(),
+                    getString(R.string.enter_another_address),
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
 
         make_root_button.setOnClickListener {
             if (prefsManager.getBoolean(HISTORY_ENABLED, false)) {
-                val list = NavigatorApp.userDao.getSearchHistory()
+                val list = viewModel.getSearchHistory()
                 var writeNewVal = true
                 list.forEach {
                     if (it.place == after_search_layout.query) {
@@ -98,14 +118,22 @@ class SearchFragment : BaseFragment() {
                     }
                 }
                 if (writeNewVal) {
-                    NavigatorApp.userDao.addSearchHistoryItem(SearchHistoryItem(place = after_search_layout.query.toString()))
+                    viewModel.addSearchHistoryItem(SearchHistoryItem(place = after_search_layout.query.toString()))
                 }
             }
             if (before_search_layout.query.isNullOrEmpty() || after_search_layout.query.isNullOrEmpty()) {
-                Toast.makeText(requireContext(), getString(R.string.enter_address), Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.enter_address),
+                    Toast.LENGTH_SHORT
+                ).show()
             } else {
-                val firstLoc = geocoder.getFromLocationName(before_search_layout.query.toString(), 1).getOrNull(0)
-                val secondLoc = geocoder.getFromLocationName(after_search_layout.query.toString(), 1).getOrNull(0)
+                val firstLoc =
+                    geocoder.getFromLocationName(before_search_layout.query.toString(), 1)
+                        .getOrNull(0)
+                val secondLoc =
+                    geocoder.getFromLocationName(after_search_layout.query.toString(), 1)
+                        .getOrNull(0)
 
                 if (firstLoc != null && secondLoc != null) {
                     val direction = SearchFragmentDirections.actionMakeRoot(
@@ -115,7 +143,11 @@ class SearchFragment : BaseFragment() {
                     )
                     openFragment(direction)
                 } else {
-                    Toast.makeText(requireContext(), getString(R.string.enter_another_address), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        requireContext(),
+                        getString(R.string.enter_another_address),
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         }
