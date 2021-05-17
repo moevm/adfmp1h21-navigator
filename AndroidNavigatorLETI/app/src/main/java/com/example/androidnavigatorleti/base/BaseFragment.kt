@@ -42,7 +42,6 @@ open class BaseFragment : Fragment() {
         }
     }
 
-    fun checkJob(job: Job?) = job == null || job.isCompleted
 
     fun setLocation(location: UserLocation) {
         prefsManager.putDouble(SharedPreferencesManager.Keys.LAT_KEY, location.lat)

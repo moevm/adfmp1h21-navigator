@@ -14,52 +14,47 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import com.example.androidnavigatorleti.R
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Observer
 import androidx.navigation.fragment.navArgs
-import com.example.androidnavigatorleti.*
+import com.example.androidnavigatorleti.PERMISSION_REQUEST_CODE
+import com.example.androidnavigatorleti.R
 import com.example.androidnavigatorleti.base.BaseFragment
+import com.example.androidnavigatorleti.checkLocationPermission
 import com.example.androidnavigatorleti.data.ParcelUserLocation
 import com.example.androidnavigatorleti.data.UserLocation
 import com.example.androidnavigatorleti.preferences.SharedPreferencesManager.Keys.LAT_KEY
 import com.example.androidnavigatorleti.preferences.SharedPreferencesManager.Keys.LNG_KEY
-import com.google.android.gms.common.api.ApiException
+import com.example.androidnavigatorleti.requestLocationPermissions
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.*
-import com.google.maps.DirectionsApi
 import com.google.maps.GeoApiContext
 import com.google.maps.android.SphericalUtil
-import com.google.maps.model.DirectionsResult
 import kotlinx.android.synthetic.main.fragment_map.*
-import kotlinx.android.synthetic.main.speed_container.view.*
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
-import java.io.IOException
-import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.Runnable
 import kotlin.math.floor
 
 
-class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
+class MapFragment : BaseFragment(), LocationListener {
 
     companion object {
 
         private const val DEFAULT_ZOOM = 12f
         private const val ZOOM_SPEED = 400
+        private const val YELLOW_SHORT = 2
+        private const val YELLOW_LONG = 3
     }
 
+    private val viewModel: MapViewModel by viewModels()
     private val args: MapFragmentArgs by navArgs()
-    private val job = SupervisorJob()
-
-    override val coroutineContext: CoroutineContext
-        get() = job + Dispatchers.Main
 
     private var map: GoogleMap? = null
     private var firstMarker: Marker? = null
     private var secondMarker: Marker? = null
     private var permissionGranted = false
-    private var locationJob: Job? = null
+
     private var polyLine: Polyline? = null
     private var locButtonClicked = false
 
@@ -67,13 +62,6 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
     private lateinit var mFusedLocationClient: FusedLocationProviderClient
     private lateinit var locationRequest: LocationRequest
     private lateinit var locationCallback: LocationCallback
-
-    private val polylinePoints: ArrayList<LatLng> = ArrayList()
-    private val trafficLights: ArrayList<LatLng> = ArrayList()
-
-    private lateinit var currentSpeedFlow: Flow<Int>
-
-    private lateinit var speedFlow: Flow<Pair<Int,Int>>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -86,39 +74,23 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
 
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? =
         inflater.inflate(R.layout.fragment_map, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
 
         map_view.onCreate(savedInstanceState)
         showMap()
 
         if (permissionGranted) startLocationUpdates()
 
-        if (args.makeRoot) {
-            close_floating_button.visibility = View.VISIBLE
-            search_container.visibility = View.VISIBLE
-            my_location_floating_button.visibility = View.GONE
+        if (args.makeRoot) makeRoot()
 
-            if (checkJob(locationJob)) {
-                locationJob = launch(this.coroutineContext) {
-                    withContext(Dispatchers.IO) {
-                        makePolyline()
-                    }
-                }
-            }
-
-            close_floating_button.setOnClickListener {
-                close_floating_button.visibility = View.GONE
-                search_container.visibility = View.GONE
-                my_location_floating_button.visibility = View.VISIBLE
-                removeMarkers()
-                polyLine?.remove()
-            }
-        }
 
         if (args.setFirstMarker) {
             root_button_page.visibility = View.VISIBLE
@@ -160,20 +132,17 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
                     ParcelUserLocation(it.latitude, it.longitude)
                 }
                 val direction = if (args.setFirstMarkerWithSecond) {
-                    MapFragmentDirections.actionAllMarkersSet(secondParcelUserLoc, firstParcelUserLoc)
+                    MapFragmentDirections.actionAllMarkersSet(
+                        secondParcelUserLoc,
+                        firstParcelUserLoc
+                    )
                 } else {
-                    MapFragmentDirections.actionAllMarkersSet(firstParcelUserLoc, secondParcelUserLoc)
+                    MapFragmentDirections.actionAllMarkersSet(
+                        firstParcelUserLoc,
+                        secondParcelUserLoc
+                    )
                 }
                 openFragment(direction)
-            }
-        }
-
-        launch(this.coroutineContext) {
-            withContext(Dispatchers.IO) {
-                currentSpeedFlow.collect {
-                    speed_layout?.current_speed?.setText(it)
-                    delay(1000)
-                }
             }
         }
     }
@@ -213,7 +182,11 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
         super.onDestroy()
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
         when (requestCode) {
             PERMISSION_REQUEST_CODE -> {
                 permissionGranted = requireContext().checkLocationPermission()
@@ -222,7 +195,11 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
                     startLocationUpdates()
                     map?.isMyLocationEnabled = true
                 } else {
-                    Toast.makeText(requireContext(), getString(R.string.enable_location), Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        requireContext(),
+                        getString(R.string.enable_location),
+                        Toast.LENGTH_LONG
+                    ).show()
                     startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                         data = Uri.fromParts("package", requireContext().packageName, null)
                         addCategory(Intent.CATEGORY_DEFAULT)
@@ -244,32 +221,39 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
 
     override fun onLocationChanged(p0: Location) {
         val newLocation = UserLocation(0, p0.latitude, p0.longitude)
+        val lastLocation = getLocation()
+
+        viewModel.collectFlows(lastLocation, newLocation)
+
         saveUserLocation(newLocation)
     }
 
-    private fun processTrafficLights() {
-        var lastPoint: LatLng? = null
-        var sum = 0.0
+    private fun makeRoot() {
+        val geoApiContext = GeoApiContext().setApiKey(getString(R.string.google_maps_key))
 
-        for (point in polylinePoints) {
-            if (lastPoint == null) {
-                lastPoint = point
-            } else {
-                sum += SphericalUtil.computeDistanceBetween(lastPoint, point)
-                lastPoint = point
-            }
+        close_floating_button.visibility = View.VISIBLE
+        search_container.visibility = View.VISIBLE
+        my_location_floating_button.visibility = View.GONE
+
+        viewModel.buildRoute(geoApiContext, args.firstMarker, args.secondMarker)
+
+        viewModel.polyLineLiveData.observe(viewLifecycleOwner, Observer {
+            //Добавляем линию на карту
+            polyLine = map?.addPolyline(it)
+            showDoubleBlockedMarkers()
+            showMarkerLocation()
+//            polylinePoints.forEach {
+//                map?.addMarker(MarkerOptions().position(LatLng(it.latitude, it.longitude)).draggable(false))
+//            }
+        })
+
+        close_floating_button.setOnClickListener {
+            close_floating_button.visibility = View.GONE
+            search_container.visibility = View.GONE
+            my_location_floating_button.visibility = View.VISIBLE
+            removeMarkers()
+            polyLine?.remove()
         }
-    }
-
-    //Cделать 1 проход а не n^2
-    private fun getDistanceWithTrafficLight(start: LatLng, end: LatLng): Double {
-        trafficLights.forEach {
-            if (it.longitude in start.longitude..end.longitude || it.latitude in start.latitude..end.latitude) {
-                return SphericalUtil.computeDistanceBetween(start, it)
-            }
-        }
-
-        return 0.0
     }
 
     private fun restartApp(action: String? = null) {
@@ -282,58 +266,10 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
         startActivity(i)
     }
 
-    private suspend fun makePolyline() {
-        //Получаем контекст для запросов, mapsApiKey хранит в себе String с ключом для карт
-        val geoApiContext = GeoApiContext().setApiKey(getString(R.string.google_maps_key))
-
-        //Здесь будет наш итоговый путь состоящий из набора точек
-        var result: DirectionsResult? = null
-        val startPoint = com.google.maps.model.LatLng(args.firstMarker?.lat ?: 0.0, args.firstMarker?.lng ?: 0.0)
-        val endPoint = com.google.maps.model.LatLng(args.secondMarker?.lat ?: 0.0, args.secondMarker?.lng ?: 0.0)
-
-        try {
-            result = DirectionsApi.newRequest(geoApiContext)
-                .origin(startPoint)
-                .destination(endPoint)
-                .await()
-        } catch (e: ApiException) {
-            e.printStackTrace()
-        } catch (e: InterruptedException) {
-            e.printStackTrace()
-        } catch (e: IOException) {
-            e.printStackTrace()
-        }
-
-        //Преобразование итогового пути в набор точек
-        val path: MutableList<com.google.maps.model.LatLng>? = result?.routes?.getOrNull(0)?.overviewPolyline?.decodePath()
-        //Линия которую будем рисовать
-        val line = PolylineOptions()
-
-        val latLngBuilder: LatLngBounds.Builder = LatLngBounds.Builder()
-
-        //Проходимся по всем точкам, добавляем их в Polyline и в LanLngBounds.Builder
-        if (path != null) {
-            for (item in path) {
-                val point = LatLng(item.lat, item.lng)
-                polylinePoints.add(point)
-                line.add(point)
-                latLngBuilder.include(point)
-            }
-        }
-
-        //Делаем линию более менее симпатичное
-        line.width(16f).color(R.color.colorPrimary)
-
-        //Добавляем линию на карту
-        withContext(Dispatchers.Main) {
-            polyLine = map?.addPolyline(line)
-            showDoubleBlockedMarkers()
-            showMarkerLocation()
-            route_time?.text = countDistance(startPoint, endPoint)
-        }
-    }
-
-    private fun countDistance(startPoint: com.google.maps.model.LatLng, endPoint: com.google.maps.model.LatLng): String {
+    private fun countDistance(
+        startPoint: com.google.maps.model.LatLng,
+        endPoint: com.google.maps.model.LatLng
+    ): String {
         val distance = SphericalUtil.computeDistanceBetween(
             LatLng(startPoint.lat, startPoint.lng),
             LatLng(endPoint.lat, endPoint.lng)
@@ -395,7 +331,7 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
                 //Show user location with delay
                 Handler(Looper.getMainLooper()).postDelayed(Runnable {
                     showMarkerOnMap()
-                },500)
+                }, 500)
 
                 uiSettings.isMyLocationButtonEnabled = false
                 uiSettings.isMapToolbarEnabled = false
@@ -407,7 +343,12 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
 
                 if (!args.setFirstMarker && !args.setSecondMarker) {
                     setOnMapLongClickListener {
-                        val direction = MapFragmentDirections.actionMapLongClick(ParcelUserLocation(it.latitude, it.longitude))
+                        val direction = MapFragmentDirections.actionMapLongClick(
+                            ParcelUserLocation(
+                                it.latitude,
+                                it.longitude
+                            )
+                        )
                         openFragment(direction)
                     }
                 }
@@ -472,8 +413,7 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
     private fun showDoubleBlockedMarkers() {
         args.firstMarker?.let {
             firstMarker = map?.addMarker(
-                MarkerOptions().
-                    position(LatLng(it.lat, it.lng)).draggable(false)
+                MarkerOptions().position(LatLng(it.lat, it.lng)).draggable(false)
             )
         }
 
@@ -499,9 +439,9 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
     }
 
     private fun showLocation(
-            location: UserLocation?,
-            permissionIsGranted: Boolean,
-            resetZoom: Boolean = true
+        location: UserLocation?,
+        permissionIsGranted: Boolean,
+        resetZoom: Boolean = true
     ) {
         if (location != null && permissionIsGranted && lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
             showDeviceLocation(location, resetZoom)
@@ -517,19 +457,23 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
 
     private fun showDeviceLocation(location: UserLocation?, resetZoom: Boolean) {
         map?.animateCamera(
-                CameraUpdateFactory.newLatLngZoom(LatLng(location?.lat ?: 0.0, location?.lng ?: 0.0),
-                        if (resetZoom) DEFAULT_ZOOM else map?.cameraPosition?.zoom ?: DEFAULT_ZOOM),
-                ZOOM_SPEED,
-                null)
+            CameraUpdateFactory.newLatLngZoom(
+                LatLng(location?.lat ?: 0.0, location?.lng ?: 0.0),
+                if (resetZoom) DEFAULT_ZOOM else map?.cameraPosition?.zoom ?: DEFAULT_ZOOM
+            ),
+            ZOOM_SPEED,
+            null
+        )
     }
 
     private fun showMarkerLocation() {
-        val builder = LatLngBounds.builder().include(firstMarker!!.position).include(secondMarker!!.position)
+        val builder =
+            LatLngBounds.builder().include(firstMarker!!.position).include(secondMarker!!.position)
         val bounds = builder.build()
 
-        val width = resources.displayMetrics.widthPixels;
-        val height = resources.displayMetrics.heightPixels;
-        val padding = (width * 0.10).toInt(); // offset from edges of the map 10% of screen
+        val width = resources.displayMetrics.widthPixels
+        val height = resources.displayMetrics.heightPixels
+        val padding = (width * 0.10).toInt() // offset from edges of the map 10% of screen
 
         map?.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, width, height, padding))
     }

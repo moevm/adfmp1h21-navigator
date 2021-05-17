@@ -1,4 +1,4 @@
-package com.example.androidnavigatorleti.ui
+package com.example.androidnavigatorleti.ui.settings
 
 import android.content.Intent
 import android.net.Uri
