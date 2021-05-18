@@ -226,6 +226,13 @@ class MapFragment : BaseFragment(), LocationListener {
         viewModel.collectFlows(lastLocation, newLocation)
 
         saveUserLocation(newLocation)
+
+        viewModel.viewStateParamsLiveData.observe(
+            viewLifecycleOwner,
+            Observer { params ->
+
+            }
+        )
     }
 
     private fun makeRoot() {
@@ -237,11 +244,13 @@ class MapFragment : BaseFragment(), LocationListener {
 
         viewModel.buildRoute(geoApiContext, args.firstMarker, args.secondMarker)
 
-        viewModel.polyLineLiveData.observe(viewLifecycleOwner, Observer {
+        viewModel.polyLineLiveData.observe(viewLifecycleOwner, Observer { options ->
             //Добавляем линию на карту
-            polyLine = map?.addPolyline(it)
-            showDoubleBlockedMarkers()
-            showMarkerLocation()
+            options?.let {
+                polyLine = map?.addPolyline(it)
+                showDoubleBlockedMarkers()
+                showMarkerLocation()
+            }
 //            polylinePoints.forEach {
 //                map?.addMarker(MarkerOptions().position(LatLng(it.latitude, it.longitude)).draggable(false))
 //            }

@@ -4,10 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.androidnavigatorleti.R
-import com.example.androidnavigatorleti.data.ParcelUserLocation
-import com.example.androidnavigatorleti.data.TrafficLight
-import com.example.androidnavigatorleti.data.UserLocation
-import com.example.androidnavigatorleti.data.toLatLng
+import com.example.androidnavigatorleti.data.*
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
@@ -19,6 +16,7 @@ import com.google.maps.model.DirectionsResult
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import java.io.IOException
 import kotlin.coroutines.CoroutineContext
@@ -35,13 +33,15 @@ class MapViewModel : ViewModel(), CoroutineScope {
     private val polylinePoints: ArrayList<LatLng> = ArrayList()
     private val trafficLights: ArrayList<TrafficLight> = ArrayList()
 
+    private val params = ViewStateParams()
+
     private val polyLineMutableLiveData = MutableLiveData<PolylineOptions?>()
     val polyLineLiveData: LiveData<PolylineOptions?>
         get() = polyLineMutableLiveData
 
-    private var currentDistance = 0.0
-    private var currentSpeed = 0
-
+    private val viewStateParamsMutableLiveData = MutableLiveData<ViewStateParams>()
+    val viewStateParamsLiveData: LiveData<ViewStateParams>
+        get() = viewStateParamsMutableLiveData
 
     private lateinit var currentSpeedFlow: Flow<Int>
     private lateinit var currentDistanceFlow: Flow<Double>
@@ -67,28 +67,33 @@ class MapViewModel : ViewModel(), CoroutineScope {
 
     fun collectFlows(lastLocation: UserLocation, newLocation: UserLocation) {
         launch(Dispatchers.IO) {
-            currentDistanceFlow.collect {
-                currentDistance -= SphericalUtil.computeDistanceBetween(
-                    lastLocation.toLatLng(),
-                    newLocation.toLatLng()
-                )
-                trafficLights[0].distance -= SphericalUtil.computeDistanceBetween(
-                        lastLocation.toLatLng(),
-                        newLocation.toLatLng()
-                )
-            }
+            currentDistanceFlow
+                .combine(trafficLightFlow) { distance, traffic ->
+                    params.also { params ->
+                        val delta = SphericalUtil.computeDistanceBetween(
+                            lastLocation.toLatLng(),
+                            newLocation.toLatLng()
+                        )
 
-            trafficLightFlow.collect {
-                if (it <= 0.0) trafficLights.removeAt(0)
-            }
+                        params.currentDistance = distance - delta
+                        trafficLights.forEach {
+                            it.distance -= delta
+                        }
 
-            currentSpeedFlow.collect {
-                currentSpeed = SphericalUtil.computeDistanceBetween(
-                    lastLocation.toLatLng(),
-                    newLocation.toLatLng()
-                ).toInt() / 1000 / 3600
-                //speed_layout?.current_speed?.setText(it)
-            }
+                        params.currentSpeed = delta.toInt() / 1000 / 3600
+
+                        params.trafficLightDistance = traffic - delta
+                        if (params.trafficLightDistance <= 0.0) trafficLights.removeAt(0)
+
+                        val (minSpeed, maxSpeed) = computeMinAndMaxSpeed(params)
+
+                        params.minSpeed = minSpeed
+                        params.maxSpeed = maxSpeed
+                    }
+                }
+                .collect {
+                    viewStateParamsMutableLiveData.postValue(it)
+                }
         }
     }
 
@@ -143,20 +148,20 @@ class MapViewModel : ViewModel(), CoroutineScope {
 
         polyLineMutableLiveData.postValue(line)
 
-        currentDistanceFlow = flow {
-            emit(currentDistance)
-        }
-
-        trafficLightFlow = flow {
-            emit(trafficLights[0].distance)
-        }
-
-        currentSpeedFlow = flow {
-            emit(currentSpeed)
-        }
-
         initTrafficLightList()
-        currentDistance = getRootTrafficLightDistance()
+
+        with(params) {
+            currentDistance = getRootTrafficLightDistance()
+            trafficLightDistance = trafficLights[0].distance
+
+            currentDistanceFlow = flow {
+                emit(currentDistance)
+            }
+
+            trafficLightFlow = flow {
+                emit(trafficLightDistance)
+            }
+        }
     }
 
     private fun initTrafficLightList() {
@@ -220,5 +225,9 @@ class MapViewModel : ViewModel(), CoroutineScope {
         }
 
         return sum
+    }
+
+    private fun computeMinAndMaxSpeed(viewStateParams: ViewStateParams): Pair<Int,Int> {
+        return 1 to 1
     }
 }
