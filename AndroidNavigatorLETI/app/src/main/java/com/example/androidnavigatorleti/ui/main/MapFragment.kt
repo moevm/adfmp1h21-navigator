@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -32,7 +33,10 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.*
 import com.google.maps.GeoApiContext
 import com.google.maps.android.SphericalUtil
+import kotlinx.android.synthetic.main.distance_container.view.*
 import kotlinx.android.synthetic.main.fragment_map.*
+import kotlinx.android.synthetic.main.search_item.*
+import kotlinx.android.synthetic.main.speed_container.view.*
 import kotlinx.coroutines.Runnable
 import kotlin.math.floor
 
@@ -223,23 +227,23 @@ class MapFragment : BaseFragment(), LocationListener {
         val newLocation = UserLocation(0, p0.latitude, p0.longitude)
         val lastLocation = getLocation()
 
-        viewModel.collectFlows(lastLocation, newLocation)
+        viewModel.postFlowValues(newLocation, lastLocation)
 
         saveUserLocation(newLocation)
+    }
 
-        viewModel.viewStateParamsLiveData.observe(
-            viewLifecycleOwner,
-            Observer { params ->
-
-            }
-        )
+    private fun formatDistance(distance: Double): String {
+        return if (distance > 1000.0) {
+            getString(R.string.kilometers, String.format("%.1f", distance / 1000.0))
+        } else {
+            getString(R.string.meters, String.format("%.1f", distance))
+        }
     }
 
     private fun makeRoot() {
         val geoApiContext = GeoApiContext().setApiKey(getString(R.string.google_maps_key))
 
         close_floating_button.visibility = View.VISIBLE
-        search_container.visibility = View.VISIBLE
         my_location_floating_button.visibility = View.GONE
 
         viewModel.buildRoute(geoApiContext, args.firstMarker, args.secondMarker)
@@ -263,6 +267,20 @@ class MapFragment : BaseFragment(), LocationListener {
             removeMarkers()
             polyLine?.remove()
         }
+
+        viewModel.collectFlows()
+
+        viewModel.viewStateParamsLiveData.observe(
+            viewLifecycleOwner,
+            Observer { params ->
+                Log.d("HIHIHI", params.toString())
+                speed_layout?.current_speed?.text = params.currentSpeed.toString()
+                speed_layout?.min_speed?.text = params.minSpeed.toString()
+                speed_layout?.max_speed?.text = params.maxSpeed.toString()
+                distance_layout?.traffic_distance?.text = formatDistance(params.currentDistance)
+                distance_layout?.point_distance?.text = formatDistance(params.trafficLightDistance)
+            }
+        )
     }
 
     private fun restartApp(action: String? = null) {

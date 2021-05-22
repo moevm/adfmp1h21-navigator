@@ -14,10 +14,7 @@ import com.google.maps.GeoApiContext
 import com.google.maps.android.SphericalUtil
 import com.google.maps.model.DirectionsResult
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.*
 import java.io.IOException
 import kotlin.coroutines.CoroutineContext
 
@@ -43,9 +40,7 @@ class MapViewModel : ViewModel(), CoroutineScope {
     val viewStateParamsLiveData: LiveData<ViewStateParams>
         get() = viewStateParamsMutableLiveData
 
-    private lateinit var currentSpeedFlow: Flow<Int>
-    private lateinit var currentDistanceFlow: Flow<Double>
-    private lateinit var trafficLightFlow: Flow<Double>
+    private var paramsFlow = MutableStateFlow(ViewStateParams())
 
     private lateinit var speedFlow: Flow<Pair<Int, Int>>
 
@@ -65,33 +60,38 @@ class MapViewModel : ViewModel(), CoroutineScope {
         }
     }
 
-    fun collectFlows(lastLocation: UserLocation, newLocation: UserLocation) {
+    fun postFlowValues(lastLocation: UserLocation, newLocation: UserLocation) {
+        val params = ViewStateParams()
+
+        params.apply {
+            val delta = SphericalUtil.computeDistanceBetween(
+                lastLocation.toLatLng(),
+                newLocation.toLatLng()
+            )
+
+            currentDistance -= delta
+            trafficLights.forEach {
+                it.distance -= delta
+            }
+
+            currentSpeed = (delta * 3.6).toInt()
+
+            trafficLightDistance -= delta
+            if (trafficLightDistance <= 0.0) trafficLights.removeAt(0)
+
+            val (minimumSpeed, maximumSpeed) = computeMinAndMaxSpeed(params)
+
+            minSpeed = minimumSpeed
+            maxSpeed = maximumSpeed
+        }
+
+        paramsFlow.value = params
+
+    }
+
+    fun collectFlows() {
         launch(Dispatchers.IO) {
-            currentDistanceFlow
-                .combine(trafficLightFlow) { distance, traffic ->
-                    params.also { params ->
-                        val delta = SphericalUtil.computeDistanceBetween(
-                            lastLocation.toLatLng(),
-                            newLocation.toLatLng()
-                        )
-
-                        params.currentDistance = distance - delta
-                        trafficLights.forEach {
-                            it.distance -= delta
-                        }
-
-                        params.currentSpeed = delta.toInt() / 1000 / 3600
-
-                        params.trafficLightDistance = traffic - delta
-                        if (params.trafficLightDistance <= 0.0) trafficLights.removeAt(0)
-
-                        val (minSpeed, maxSpeed) = computeMinAndMaxSpeed(params)
-
-                        params.minSpeed = minSpeed
-                        params.maxSpeed = maxSpeed
-                    }
-                }
-                .collect {
+            paramsFlow.collect {
                     viewStateParamsMutableLiveData.postValue(it)
                 }
         }
@@ -150,18 +150,13 @@ class MapViewModel : ViewModel(), CoroutineScope {
 
         initTrafficLightList()
 
-        with(params) {
-            currentDistance = getRootTrafficLightDistance()
-            trafficLightDistance = trafficLights[0].distance
+        val curDistance = getRootTrafficLightDistance()
+        val trafficLightDist = trafficLights[0].distance
 
-            currentDistanceFlow = flow {
-                emit(currentDistance)
-            }
-
-            trafficLightFlow = flow {
-                emit(trafficLightDistance)
-            }
-        }
+        paramsFlow.value = ViewStateParams(
+            currentDistance = curDistance,
+            trafficLightDistance = trafficLightDist
+        )
     }
 
     private fun initTrafficLightList() {
