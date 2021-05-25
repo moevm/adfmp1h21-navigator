@@ -13,12 +13,22 @@ import com.google.maps.DirectionsApi
 import com.google.maps.GeoApiContext
 import com.google.maps.android.SphericalUtil
 import com.google.maps.model.DirectionsResult
+import com.instacart.library.truetime.TrueTime
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
 import java.io.IOException
 import kotlin.coroutines.CoroutineContext
+import kotlin.math.min
+import kotlin.math.roundToLong
 
 class MapViewModel : ViewModel(), CoroutineScope {
+
+    companion object {
+
+        const val MAX_SPEED = 60L
+    }
 
     override val coroutineContext: CoroutineContext
         get() = job + Dispatchers.Main
@@ -29,8 +39,6 @@ class MapViewModel : ViewModel(), CoroutineScope {
 
     private val polylinePoints: ArrayList<LatLng> = ArrayList()
     private val trafficLights: ArrayList<TrafficLight> = ArrayList()
-
-    private val params = ViewStateParams()
 
     private val polyLineMutableLiveData = MutableLiveData<PolylineOptions?>()
     val polyLineLiveData: LiveData<PolylineOptions?>
@@ -79,7 +87,7 @@ class MapViewModel : ViewModel(), CoroutineScope {
             trafficLightDistance -= delta
             if (trafficLightDistance <= 0.0) trafficLights.removeAt(0)
 
-            val (minimumSpeed, maximumSpeed) = computeMinAndMaxSpeed(params)
+            val (minimumSpeed, maximumSpeed) = computeMinAndMaxSpeed()
 
             minSpeed = minimumSpeed
             maxSpeed = maximumSpeed
@@ -92,8 +100,8 @@ class MapViewModel : ViewModel(), CoroutineScope {
     fun collectFlows() {
         launch(Dispatchers.IO) {
             paramsFlow.collect {
-                    viewStateParamsMutableLiveData.postValue(it)
-                }
+                viewStateParamsMutableLiveData.postValue(it)
+            }
         }
     }
 
@@ -222,7 +230,25 @@ class MapViewModel : ViewModel(), CoroutineScope {
         return sum
     }
 
-    private fun computeMinAndMaxSpeed(viewStateParams: ViewStateParams): Pair<Int,Int> {
-        return 1 to 1
+    private fun computeMinAndMaxSpeed(): Pair<Long, Long> {
+        val nearestTrafficLights = trafficLights.filter { it.distance < 500.0 }
+        var minSpeed = 60L
+        var maxSpeed = 60L
+
+        nearestTrafficLights.forEach {
+            val currentOffset = TrueTime.now().time % it.interval
+            val greenOffset = it.startGreenOffset - currentOffset
+            val redOffset = it.startRedOffset - currentOffset
+
+            if (greenOffset < 0) {
+                minSpeed = min(minSpeed, (it.distance / redOffset).roundToLong())
+                maxSpeed = min(maxSpeed, min(greenOffset, MAX_SPEED))
+            } else {
+                minSpeed = min(minSpeed, min(greenOffset, redOffset))
+                maxSpeed = min(maxSpeed, MAX_SPEED)
+            }
+        }
+
+        return minSpeed to maxSpeed
     }
 }
