@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
 import java.io.IOException
 import kotlin.coroutines.CoroutineContext
+import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToLong
 
@@ -241,13 +242,8 @@ class MapViewModel : ViewModel(), CoroutineScope {
             val greenOffset = it.startGreenOffset - currentOffset
             val redOffset = it.startRedOffset - currentOffset - YELLOW_SIGNAL_TIME
 
-            if (greenOffset < 0) {
-                minSpeed = min(minSpeed, (it.distance / redOffset).roundToLong())
-                maxSpeed = min(maxSpeed, min(greenOffset, MAX_SPEED))
-            } else {
-                minSpeed = min(minSpeed, min(greenOffset, redOffset))
-                maxSpeed = min(maxSpeed, MAX_SPEED)
-            }
+            minSpeed = if (redOffset < 0) min(redOffset + it.interval, MAX_SPEED) else min(redOffset, MAX_SPEED)
+            maxSpeed = if (greenOffset < 0) min(greenOffset + it.interval, MAX_SPEED) else min(greenOffset, MAX_SPEED)
         }
 
         return minSpeed to maxSpeed
