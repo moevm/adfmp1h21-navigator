@@ -28,6 +28,7 @@ class MapViewModel : ViewModel(), CoroutineScope {
     companion object {
 
         const val MAX_SPEED = 60L
+        const val YELLOW_SIGNAL_TIME = 3L
     }
 
     override val coroutineContext: CoroutineContext
@@ -238,7 +239,7 @@ class MapViewModel : ViewModel(), CoroutineScope {
         nearestTrafficLights.forEach {
             val currentOffset = TrueTime.now().time % it.interval
             val greenOffset = it.startGreenOffset - currentOffset
-            val redOffset = it.startRedOffset - currentOffset
+            val redOffset = it.startRedOffset - currentOffset - YELLOW_SIGNAL_TIME
 
             if (greenOffset < 0) {
                 minSpeed = min(minSpeed, (it.distance / redOffset).roundToLong())
