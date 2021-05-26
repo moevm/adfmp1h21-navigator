@@ -12,6 +12,7 @@
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
     <include
+        android:visibility="gone"
         android:id="@+id/speed_layout"
         layout="@layout/speed_container"
         android:layout_width="40dp"
@@ -21,6 +22,7 @@
         android:layout_marginTop="10dp" />
 
     <include
+        android:visibility="gone"
         android:id="@+id/distance_layout"
         layout="@layout/distance_container"
         android:layout_width="wrap_content"

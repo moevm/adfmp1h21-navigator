@@ -241,6 +241,8 @@ class MapFragment : BaseFragment(), LocationListener {
     private fun makeRoot() {
         val geoApiContext = GeoApiContext().setApiKey(getString(R.string.google_maps_key))
 
+        speed_layout?.visibility = View.VISIBLE
+        distance_layout?.visibility = View.VISIBLE
         close_floating_button.visibility = View.VISIBLE
         my_location_floating_button.visibility = View.GONE
 
