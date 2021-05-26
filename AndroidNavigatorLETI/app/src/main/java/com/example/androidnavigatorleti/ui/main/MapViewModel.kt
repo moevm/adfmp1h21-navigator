@@ -40,7 +40,7 @@ class MapViewModel : ViewModel(), CoroutineScope {
     private var locationJob: Job? = null
 
     private val polylinePoints: ArrayList<LatLng> = ArrayList()
-    private val trafficLights: ArrayList<TrafficLight> = ArrayList()
+    val trafficLights: ArrayList<TrafficLight> = ArrayList()
 
     private val polyLineMutableLiveData = MutableLiveData<PolylineOptions?>()
     val polyLineLiveData: LiveData<PolylineOptions?>
@@ -169,15 +169,15 @@ class MapViewModel : ViewModel(), CoroutineScope {
         )
     }
 
-    private fun initTrafficLightList() {
+    fun initTrafficLightList() {
         trafficLights.add(
             TrafficLight(
                 location = LatLng(59.93296000000001, 30.244760000000003),
                 distance = 0.0,
                 orientation = 0,
-                startGreenOffset = 0,
-                startRedOffset = 10,
-                interval = 20
+                startGreenOffset = 53,
+                startRedOffset = 22,
+                interval = 63
             )
         )
         trafficLights.add(
@@ -185,9 +185,9 @@ class MapViewModel : ViewModel(), CoroutineScope {
                 location = LatLng(59.93401000000001, 30.247650000000004),
                 distance = 0.0,
                 orientation = 0,
-                startGreenOffset = 5,
-                startRedOffset = 10,
-                interval = 23
+                startGreenOffset = 76,
+                startRedOffset = 39,
+                interval = 94
             )
         )
         trafficLights.add(
@@ -195,9 +195,9 @@ class MapViewModel : ViewModel(), CoroutineScope {
                 location = LatLng(59.9346, 30.249350000000003),
                 distance = 0.0,
                 orientation = 0,
-                startGreenOffset = 10,
-                startRedOffset = 10,
-                interval = 26
+                startGreenOffset = 40,
+                startRedOffset = 61,
+                interval = 69
             )
         )
         trafficLights.add(
@@ -205,11 +205,51 @@ class MapViewModel : ViewModel(), CoroutineScope {
                 location = LatLng(59.939510000000006, 30.266050000000003),
                 distance = 0.0,
                 orientation = 0,
-                startGreenOffset = 15,
-                startRedOffset = 10,
-                interval = 30
+                startGreenOffset = 17,
+                startRedOffset = 71,
+                interval = 95
             )
         )
+//        trafficLights.add(
+//            TrafficLight(
+//                location = LatLng(59.93296000000001, 30.244760000000003),
+//                distance = 0.0,
+//                orientation = 0,
+//                startGreenOffset = 17,
+//                startRedOffset = 50,
+//                interval = 60
+//            )
+//        )
+//        trafficLights.add(
+//            TrafficLight(
+//                location = LatLng(59.93401000000001, 30.247650000000004),
+//                distance = 0.0,
+//                orientation = 0,
+//                startGreenOffset = 51,
+//                startRedOffset = 13,
+//                interval = 95
+//            )
+//        )
+//        trafficLights.add(
+//            TrafficLight(
+//                location = LatLng(59.9346, 30.249350000000003),
+//                distance = 0.0,
+//                orientation = 0,
+//                startGreenOffset = 37,
+//                startRedOffset = 56,
+//                interval = 66
+//            )
+//        )
+//        trafficLights.add(
+//            TrafficLight(
+//                location = LatLng(59.939510000000006, 30.266050000000003),
+//                distance = 0.0,
+//                orientation = 0,
+//                startGreenOffset = 57,
+//                startRedOffset = 6,
+//                interval = 105
+//            )
+//        )
     }
 
     private fun getRootTrafficLightDistance(): Double {

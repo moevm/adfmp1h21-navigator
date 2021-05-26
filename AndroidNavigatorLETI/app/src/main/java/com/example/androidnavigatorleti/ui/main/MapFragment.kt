@@ -38,6 +38,7 @@ import kotlinx.android.synthetic.main.fragment_map.*
 import kotlinx.android.synthetic.main.search_item.*
 import kotlinx.android.synthetic.main.speed_container.view.*
 import kotlinx.coroutines.Runnable
+import java.util.*
 import kotlin.math.floor
 
 
@@ -157,6 +158,15 @@ class MapFragment : BaseFragment(), LocationListener {
 
     override fun onResume() {
         super.onResume()
+
+//        val date = Calendar.getInstance()
+//
+//        viewModel.initTrafficLightList()
+//
+//        date.set(2021, 4, 25, 2, 16, 42)
+//        Log.d("HIHI", ((date.time.time / 1000) % viewModel.trafficLights[3].interval).toString())
+//        date.set(2021, 4, 25, 2, 17, 36)
+//        Log.d("HIHI", ((date.time.time / 1000) % viewModel.trafficLights[3].interval).toString())
 
         map_view.onResume()
         my_location_floating_button.setOnClickListener {
