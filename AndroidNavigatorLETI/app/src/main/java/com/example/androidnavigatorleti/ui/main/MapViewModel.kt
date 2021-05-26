@@ -1,8 +1,10 @@
 package com.example.androidnavigatorleti.ui.main
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.androidnavigatorleti.R
 import com.example.androidnavigatorleti.data.*
 import com.google.android.gms.common.api.ApiException
@@ -20,9 +22,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
 import java.io.IOException
 import kotlin.coroutines.CoroutineContext
+import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.math.roundToLong
 
 class MapViewModel : ViewModel(), CoroutineScope {
 
@@ -39,6 +41,9 @@ class MapViewModel : ViewModel(), CoroutineScope {
 
     private var locationJob: Job? = null
 
+    private val params = ViewStateParams()
+    var isPolylineBuild = false
+
     private val polylinePoints: ArrayList<LatLng> = ArrayList()
     val trafficLights: ArrayList<TrafficLight> = ArrayList()
 
@@ -51,8 +56,6 @@ class MapViewModel : ViewModel(), CoroutineScope {
         get() = viewStateParamsMutableLiveData
 
     private var paramsFlow = MutableStateFlow(ViewStateParams())
-
-    private lateinit var speedFlow: Flow<Pair<Int, Int>>
 
     fun checkJob(job: Job?) = job == null || job.isCompleted
 
@@ -71,37 +74,48 @@ class MapViewModel : ViewModel(), CoroutineScope {
     }
 
     fun postFlowValues(lastLocation: UserLocation, newLocation: UserLocation) {
-        val params = ViewStateParams()
-
-        params.apply {
+        params.let {
             val delta = SphericalUtil.computeDistanceBetween(
                 lastLocation.toLatLng(),
                 newLocation.toLatLng()
             )
 
-            currentDistance -= delta
-            trafficLights.forEach {
-                it.distance -= delta
+            it.currentSpeed = (delta * 3.6).toInt()
+
+            if (delta != 0.0) {
+                it.currentDistance -= delta
+                trafficLights.forEach { light ->
+                    light.distance -= delta
+                }
+
+                if (isPolylineBuild) {
+                    it.trafficLightDistance -= delta
+
+                    if (it.trafficLightDistance <= 0.0) {
+                        if (trafficLights.size == 1) {
+                            it.trafficLightDistance = 0.0
+                        }
+                        if (trafficLights.size > 1) {
+                            trafficLights.removeAt(0)
+                            it.trafficLightDistance = trafficLights.getOrNull(0)?.distance ?: 0.0
+                        }
+                    }
+                }
+
+                val (minimumSpeed, maximumSpeed) = computeMinAndMaxSpeed()
+
+                it.minSpeed = minimumSpeed
+                it.maxSpeed = maximumSpeed
+
+                viewStateParamsMutableLiveData.postValue(it)
             }
-
-            currentSpeed = (delta * 3.6).toInt()
-
-            trafficLightDistance -= delta
-            if (trafficLightDistance <= 0.0 && trafficLights.size > 0) trafficLights.removeAt(0)
-
-            val (minimumSpeed, maximumSpeed) = computeMinAndMaxSpeed()
-
-            minSpeed = minimumSpeed
-            maxSpeed = maximumSpeed
         }
-
-        paramsFlow.value = params
-
     }
 
     fun collectFlows() {
-        launch(Dispatchers.IO) {
+        viewModelScope.launch {
             paramsFlow.collect {
+                //Log.d("HIHI", it.toString())
                 viewStateParamsMutableLiveData.postValue(it)
             }
         }
@@ -112,7 +126,7 @@ class MapViewModel : ViewModel(), CoroutineScope {
         firstMarker: ParcelUserLocation?,
         secondMarker: ParcelUserLocation?
     ) {
-        //Получаем контекст для запросов, mapsApiKey хранит в себе String с ключом для карт
+        isPolylineBuild = true
 
         //Здесь будет наш итоговый путь состоящий из набора точек
         var result: DirectionsResult? = null
@@ -163,10 +177,10 @@ class MapViewModel : ViewModel(), CoroutineScope {
         val curDistance = getRootTrafficLightDistance()
         val trafficLightDist = trafficLights[0].distance
 
-        paramsFlow.value = ViewStateParams(
-            currentDistance = curDistance,
-            trafficLightDistance = trafficLightDist
-        )
+        params.currentDistance = curDistance
+        params.trafficLightDistance = trafficLightDist
+
+        viewStateParamsMutableLiveData.postValue(params)
     }
 
     fun initTrafficLightList() {
@@ -273,22 +287,28 @@ class MapViewModel : ViewModel(), CoroutineScope {
     }
 
     private fun computeMinAndMaxSpeed(): Pair<Long, Long> {
-        val nearestTrafficLights = trafficLights.filter { it.distance < 500.0 }
-        var minSpeed = 60L
-        var maxSpeed = 60L
+        var redSpeed = 0L
+        var greenSpeed = 60L
 
-        nearestTrafficLights.forEach {
-            val currentOffset = TrueTime.now().time % it.interval
-            var greenOffset = it.startGreenOffset - currentOffset
-            var redOffset = it.startRedOffset - currentOffset - YELLOW_SIGNAL_TIME
+        trafficLights.getOrNull(0)?.apply {
+            val currentOffset = TrueTime.now().time % interval
+            val greenOffset = (startGreenOffset - currentOffset + interval) % interval
+            val redOffset = (startRedOffset - currentOffset - YELLOW_SIGNAL_TIME + interval) % interval
 
-            if (redOffset < 0) redOffset += it.interval
-            if (greenOffset < 0) greenOffset += it.interval
+            redSpeed = floor(distance / redOffset * 3.6).toLong()
+            greenSpeed = floor(distance / greenOffset * 3.6).toLong()
 
-            minSpeed = max(min((it.distance / redOffset).toLong(), MAX_SPEED), minSpeed)
-            maxSpeed = min(min((it.distance / greenOffset).toLong(), MAX_SPEED), maxSpeed)
+            if (redSpeed > MAX_SPEED) {
+                redSpeed = floor(distance / (redOffset + interval) * 3.6).toLong()
+            }
+
+            greenSpeed = min(greenSpeed, MAX_SPEED)
+
+//            Log.d("HAHA", "$currentOffset $greenOffset $redOffset")
+//
+//            Log.d("HAHA", "$greenSpeed $redSpeed")
         }
 
-        return minSpeed to maxSpeed
+        return min(greenSpeed, redSpeed) to max(greenSpeed, redSpeed)
     }
 }

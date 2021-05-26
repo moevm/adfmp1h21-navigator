@@ -263,6 +263,7 @@ class MapFragment : BaseFragment() {
         })
 
         close_floating_button.setOnClickListener {
+            viewModel.isPolylineBuild = false
             close_floating_button.visibility = View.GONE
             search_container.visibility = View.GONE
             my_location_floating_button.visibility = View.VISIBLE
@@ -318,8 +319,8 @@ class MapFragment : BaseFragment() {
         locationRequest = LocationRequest()
         locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         locationRequest.interval = 1000
-        locationRequest.fastestInterval = 100
-        locationRequest.smallestDisplacement = 0f
+        locationRequest.fastestInterval = 1000
+        locationRequest.smallestDisplacement = 5f
     }
 
     private fun startLocationUpdates() {
@@ -343,8 +344,6 @@ class MapFragment : BaseFragment() {
 
                     val oldLoc = getLocation()
                     val newLoc = UserLocation(lat = latitude, lng = longitude)
-
-                    Log.d("HIHI", SphericalUtil.computeDistanceBetween(oldLoc.toLatLng(), newLoc.toLatLng()).toString())
 
                     viewModel.postFlowValues(newLoc, oldLoc)
 
