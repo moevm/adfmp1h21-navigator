@@ -239,11 +239,14 @@ class MapViewModel : ViewModel(), CoroutineScope {
 
         nearestTrafficLights.forEach {
             val currentOffset = TrueTime.now().time % it.interval
-            val greenOffset = it.startGreenOffset - currentOffset
-            val redOffset = it.startRedOffset - currentOffset - YELLOW_SIGNAL_TIME
+            var greenOffset = it.startGreenOffset - currentOffset
+            var redOffset = it.startRedOffset - currentOffset - YELLOW_SIGNAL_TIME
 
-            minSpeed = if (redOffset < 0) min(redOffset + it.interval, MAX_SPEED) else min(redOffset, MAX_SPEED)
-            maxSpeed = if (greenOffset < 0) min(greenOffset + it.interval, MAX_SPEED) else min(greenOffset, MAX_SPEED)
+            if (redOffset < 0) redOffset += it.interval
+            if (greenOffset < 0) greenOffset += it.interval
+
+            minSpeed = max(min((it.distance / redOffset).toLong(), MAX_SPEED), minSpeed)
+            maxSpeed = min(min((it.distance / greenOffset).toLong(), MAX_SPEED), maxSpeed)
         }
 
         return minSpeed to maxSpeed

@@ -24,7 +24,7 @@
             app:layout_constraintBottom_toBottomOf="@+id/point_distance"
             app:layout_constraintRight_toLeftOf="@+id/point_distance"
             app:layout_constraintTop_toTopOf="@+id/point_distance"
-            app:srcCompat="@drawable/ic_launcher" />
+            app:srcCompat="@drawable/ic_segment" />
 
         <TextView
             android:id="@+id/point_distance"
@@ -57,7 +57,7 @@
             app:layout_constraintBottom_toBottomOf="@+id/traffic_distance"
             app:layout_constraintRight_toLeftOf="@+id/traffic_distance"
             app:layout_constraintTop_toTopOf="@+id/traffic_distance"
-            app:srcCompat="@drawable/ic_launcher" />
+            app:srcCompat="@drawable/ic_trafficlight" />
 
         <TextView
             android:id="@+id/traffic_distance"

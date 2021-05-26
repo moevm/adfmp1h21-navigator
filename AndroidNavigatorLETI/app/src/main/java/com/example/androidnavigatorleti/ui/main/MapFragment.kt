@@ -47,8 +47,6 @@ class MapFragment : BaseFragment(), LocationListener {
 
         private const val DEFAULT_ZOOM = 12f
         private const val ZOOM_SPEED = 400
-        private const val YELLOW_SHORT = 2
-        private const val YELLOW_LONG = 3
     }
 
     private val viewModel: MapViewModel by viewModels()
@@ -236,7 +234,7 @@ class MapFragment : BaseFragment(), LocationListener {
         return if (distance > 1000.0) {
             getString(R.string.kilometers, String.format("%.1f", distance / 1000.0))
         } else {
-            getString(R.string.meters, String.format("%.1f", distance))
+            getString(R.string.meters, String.format("%.0f", distance))
         }
     }
 
@@ -273,7 +271,6 @@ class MapFragment : BaseFragment(), LocationListener {
         viewModel.viewStateParamsLiveData.observe(
             viewLifecycleOwner,
             Observer { params ->
-                Log.d("HIHIHI", params.toString())
                 speed_layout?.current_speed?.text = params.currentSpeed.toString()
                 speed_layout?.min_speed?.text = params.minSpeed.toString()
                 speed_layout?.max_speed?.text = params.maxSpeed.toString()
