@@ -87,7 +87,7 @@ class MapViewModel : ViewModel(), CoroutineScope {
             currentSpeed = (delta * 3.6).toInt()
 
             trafficLightDistance -= delta
-            if (trafficLightDistance <= 0.0) trafficLights.removeAt(0)
+            if (trafficLightDistance <= 0.0 && trafficLights.size > 0) trafficLights.removeAt(0)
 
             val (minimumSpeed, maximumSpeed) = computeMinAndMaxSpeed()
 

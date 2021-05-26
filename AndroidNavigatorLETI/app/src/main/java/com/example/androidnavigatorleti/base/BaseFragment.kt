@@ -78,10 +78,8 @@ open class BaseFragment : Fragment() {
     }
 
     fun getLocation(): UserLocation {
-        val lat =
-            prefsManager.getDouble(SharedPreferencesManager.Keys.LAT_KEY, DEFAULT_USER_LATITUDE)
-        val lng =
-            prefsManager.getDouble(SharedPreferencesManager.Keys.LNG_KEY, DEFAULT_USER_LONGITUDE)
+        val lat = prefsManager.getDouble(SharedPreferencesManager.Keys.LAT_KEY, DEFAULT_USER_LATITUDE)
+        val lng = prefsManager.getDouble(SharedPreferencesManager.Keys.LNG_KEY, DEFAULT_USER_LONGITUDE)
         return UserLocation(lat = lat, lng = lng)
     }
 }

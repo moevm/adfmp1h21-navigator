@@ -24,6 +24,7 @@ import com.example.androidnavigatorleti.base.BaseFragment
 import com.example.androidnavigatorleti.checkLocationPermission
 import com.example.androidnavigatorleti.data.ParcelUserLocation
 import com.example.androidnavigatorleti.data.UserLocation
+import com.example.androidnavigatorleti.data.toLatLng
 import com.example.androidnavigatorleti.preferences.SharedPreferencesManager.Keys.LAT_KEY
 import com.example.androidnavigatorleti.preferences.SharedPreferencesManager.Keys.LNG_KEY
 import com.example.androidnavigatorleti.requestLocationPermissions
@@ -42,7 +43,7 @@ import java.util.*
 import kotlin.math.floor
 
 
-class MapFragment : BaseFragment(), LocationListener {
+class MapFragment : BaseFragment() {
 
     companion object {
 
@@ -231,15 +232,6 @@ class MapFragment : BaseFragment(), LocationListener {
         }
     }
 
-    override fun onLocationChanged(p0: Location) {
-        val newLocation = UserLocation(0, p0.latitude, p0.longitude)
-        val lastLocation = getLocation()
-
-        viewModel.postFlowValues(newLocation, lastLocation)
-
-        saveUserLocation(newLocation)
-    }
-
     private fun formatDistance(distance: Double): String {
         return if (distance > 1000.0) {
             getString(R.string.kilometers, String.format("%.1f", distance / 1000.0))
@@ -286,8 +278,8 @@ class MapFragment : BaseFragment(), LocationListener {
                 speed_layout?.current_speed?.text = params.currentSpeed.toString()
                 speed_layout?.min_speed?.text = params.minSpeed.toString()
                 speed_layout?.max_speed?.text = params.maxSpeed.toString()
-                distance_layout?.traffic_distance?.text = formatDistance(params.currentDistance)
-                distance_layout?.point_distance?.text = formatDistance(params.trafficLightDistance)
+                distance_layout?.traffic_distance?.text = formatDistance(params.trafficLightDistance)
+                distance_layout?.point_distance?.text = formatDistance(params.currentDistance)
             }
         )
     }
@@ -325,9 +317,9 @@ class MapFragment : BaseFragment(), LocationListener {
     private fun buildLocationRequest() {
         locationRequest = LocationRequest()
         locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-        locationRequest.interval = 100
+        locationRequest.interval = 1000
         locationRequest.fastestInterval = 100
-        locationRequest.smallestDisplacement = 10f
+        locationRequest.smallestDisplacement = 0f
     }
 
     private fun startLocationUpdates() {
@@ -348,8 +340,14 @@ class MapFragment : BaseFragment(), LocationListener {
                 for (location in locationResult.locations) {
                     val latitude = location.latitude
                     val longitude = location.longitude
+
                     val oldLoc = getLocation()
                     val newLoc = UserLocation(lat = latitude, lng = longitude)
+
+                    Log.d("HIHI", SphericalUtil.computeDistanceBetween(oldLoc.toLatLng(), newLoc.toLatLng()).toString())
+
+                    viewModel.postFlowValues(newLoc, oldLoc)
+
                     if (locButtonClicked && oldLoc.lat != latitude && oldLoc.lng != longitude) {
                         showLocation(newLoc, permissionGranted, true)
                     } else {
