@@ -82,7 +82,7 @@ class MapViewModel : ViewModel(), CoroutineScope {
                 SphericalUtil.computeDistanceBetween(last.toLatLng(), newLocation.toLatLng())
             } ?: 0.0
 
-            if (lastLocation == null) lastLocation = UserLocation(lat = newLocation.lat, lng = newLocation.lng)
+            lastLocation = newLocation
 
             it.currentSpeed = (delta * 3.6).toInt()
 
@@ -92,17 +92,11 @@ class MapViewModel : ViewModel(), CoroutineScope {
             }
 
             if (isPolylineBuild) {
-                if (trafficLights.size > 0) it.trafficLightDistance = trafficLights[0].distance
-
-                if (it.trafficLightDistance <= 0.0) {
-                    if (trafficLights.size == 1) {
-                        it.trafficLightDistance = 0.0
-                    }
-                    if (trafficLights.size > 1) {
-                        trafficLights.removeAt(0)
-                        it.trafficLightDistance = trafficLights.getOrNull(0)?.distance ?: 0.0
-                    }
+                if (trafficLights.size > 0 && it.trafficLightDistance < trafficLights[0].distance) {
+                    trafficLights.removeAt(0)
                 }
+
+                if (trafficLights.size > 0) it.trafficLightDistance = trafficLights[0].distance
             }
 
             val (minimumSpeed, maximumSpeed) = computeMinAndMaxSpeed()
@@ -195,86 +189,86 @@ class MapViewModel : ViewModel(), CoroutineScope {
     }
 
     fun initTrafficLightList() {
-//        trafficLights.add(
-//            TrafficLight(
-//                location = LatLng(59.93296000000001, 30.244760000000003),
-//                distance = 0.0,
-//                orientation = 0,
-//                startGreenOffset = 53,
-//                startRedOffset = 22,
-//                interval = 63
-//            )
-//        )
-//        trafficLights.add(
-//            TrafficLight(
-//                location = LatLng(59.93401000000001, 30.247650000000004),
-//                distance = 0.0,
-//                orientation = 0,
-//                startGreenOffset = 76,
-//                startRedOffset = 39,
-//                interval = 94
-//            )
-//        )
-//        trafficLights.add(
-//            TrafficLight(
-//                location = LatLng(59.9346, 30.249350000000003),
-//                distance = 0.0,
-//                orientation = 0,
-//                startGreenOffset = 40,
-//                startRedOffset = 61,
-//                interval = 69
-//            )
-//        )
-//        trafficLights.add(
-//            TrafficLight(
-//                location = LatLng(59.939510000000006, 30.266050000000003),
-//                distance = 0.0,
-//                orientation = 0,
-//                startGreenOffset = 17,
-//                startRedOffset = 71,
-//                interval = 95
-//            )
-//        )
         trafficLights.add(
-                TrafficLight(
-                        location = LatLng(59.93296000000001, 30.244760000000003),
-                        distance = 0.0,
-                        orientation = 0,
-                        startGreenOffset = 17,
-                        startRedOffset = 50,
-                        interval = 60
-                )
+            TrafficLight(
+                location = LatLng(59.93296000000001, 30.244760000000003),
+                distance = 0.0,
+                orientation = 0,
+                startGreenOffset = 53,
+                startRedOffset = 22,
+                interval = 63
+            )
         )
         trafficLights.add(
-                TrafficLight(
-                        location = LatLng(59.93401000000001, 30.247650000000004),
-                        distance = 0.0,
-                        orientation = 0,
-                        startGreenOffset = 51,
-                        startRedOffset = 13,
-                        interval = 95
-                )
+            TrafficLight(
+                location = LatLng(59.93401000000001, 30.247650000000004),
+                distance = 0.0,
+                orientation = 0,
+                startGreenOffset = 76,
+                startRedOffset = 39,
+                interval = 94
+            )
         )
         trafficLights.add(
-                TrafficLight(
-                        location = LatLng(59.9346, 30.249350000000003),
-                        distance = 0.0,
-                        orientation = 0,
-                        startGreenOffset = 37,
-                        startRedOffset = 56,
-                        interval = 66
-                )
+            TrafficLight(
+                location = LatLng(59.9346, 30.249350000000003),
+                distance = 0.0,
+                orientation = 0,
+                startGreenOffset = 40,
+                startRedOffset = 61,
+                interval = 69
+            )
         )
         trafficLights.add(
-                TrafficLight(
-                        location = LatLng(59.939510000000006, 30.266050000000003),
-                        distance = 0.0,
-                        orientation = 0,
-                        startGreenOffset = 57,
-                        startRedOffset = 6,
-                        interval = 105
-                )
+            TrafficLight(
+                location = LatLng(59.939510000000006, 30.266050000000003),
+                distance = 0.0,
+                orientation = 0,
+                startGreenOffset = 17,
+                startRedOffset = 71,
+                interval = 95
+            )
         )
+//        trafficLights.add(
+//                TrafficLight(
+//                        location = LatLng(59.93296000000001, 30.244760000000003),
+//                        distance = 0.0,
+//                        orientation = 0,
+//                        startGreenOffset = 17,
+//                        startRedOffset = 50,
+//                        interval = 60
+//                )
+//        )
+//        trafficLights.add(
+//                TrafficLight(
+//                        location = LatLng(59.93401000000001, 30.247650000000004),
+//                        distance = 0.0,
+//                        orientation = 0,
+//                        startGreenOffset = 51,
+//                        startRedOffset = 13,
+//                        interval = 95
+//                )
+//        )
+//        trafficLights.add(
+//                TrafficLight(
+//                        location = LatLng(59.9346, 30.249350000000003),
+//                        distance = 0.0,
+//                        orientation = 0,
+//                        startGreenOffset = 37,
+//                        startRedOffset = 56,
+//                        interval = 66
+//                )
+//        )
+//        trafficLights.add(
+//                TrafficLight(
+//                        location = LatLng(59.939510000000006, 30.266050000000003),
+//                        distance = 0.0,
+//                        orientation = 0,
+//                        startGreenOffset = 57,
+//                        startRedOffset = 6,
+//                        interval = 105
+//                )
+//        )
     }
 
     private fun getRootTrafficLightDistance(): Double {

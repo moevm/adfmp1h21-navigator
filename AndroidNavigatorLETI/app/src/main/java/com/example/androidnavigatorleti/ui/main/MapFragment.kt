@@ -347,7 +347,6 @@ class MapFragment : BaseFragment() {
                     val oldLoc = getLocation()
                     val newLoc = UserLocation(lat = latitude, lng = longitude)
 
-                    viewModel.lastLocation = oldLoc
                     viewModel.newLocation = newLoc
 
                     if (locButtonClicked && oldLoc.lat != latitude && oldLoc.lng != longitude) {
