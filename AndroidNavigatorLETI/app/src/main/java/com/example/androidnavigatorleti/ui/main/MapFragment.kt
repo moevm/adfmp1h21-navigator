@@ -34,6 +34,7 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.*
 import com.google.maps.GeoApiContext
 import com.google.maps.android.SphericalUtil
+import kotlinx.android.synthetic.main.distance_container.*
 import kotlinx.android.synthetic.main.distance_container.view.*
 import kotlinx.android.synthetic.main.fragment_map.*
 import kotlinx.android.synthetic.main.search_item.*
@@ -264,8 +265,9 @@ class MapFragment : BaseFragment() {
 
         close_floating_button.setOnClickListener {
             viewModel.isPolylineBuild = false
+            speed_layout?.visibility = View.GONE
+            distance_layout?.visibility = View.GONE
             close_floating_button.visibility = View.GONE
-            search_container.visibility = View.GONE
             my_location_floating_button.visibility = View.VISIBLE
             removeMarkers()
             polyLine?.remove()
@@ -345,7 +347,8 @@ class MapFragment : BaseFragment() {
                     val oldLoc = getLocation()
                     val newLoc = UserLocation(lat = latitude, lng = longitude)
 
-                    viewModel.postFlowValues(newLoc, oldLoc)
+                    viewModel.lastLocation = oldLoc
+                    viewModel.newLocation = newLoc
 
                     if (locButtonClicked && oldLoc.lat != latitude && oldLoc.lng != longitude) {
                         showLocation(newLoc, permissionGranted, true)

@@ -1,6 +1,7 @@
 package com.example.androidnavigatorleti.ui.main
 
-import android.util.Log
+import android.os.Handler
+import android.os.Looper
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -17,7 +18,6 @@ import com.google.maps.android.SphericalUtil
 import com.google.maps.model.DirectionsResult
 import com.instacart.library.truetime.TrueTime
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
 import java.io.IOException
@@ -44,6 +44,9 @@ class MapViewModel : ViewModel(), CoroutineScope {
     private val params = ViewStateParams()
     var isPolylineBuild = false
 
+    var newLocation = UserLocation(lat = 0.0, lng = 0.0)
+    var lastLocation: UserLocation? = null
+
     private val polylinePoints: ArrayList<LatLng> = ArrayList()
     val trafficLights: ArrayList<TrafficLight> = ArrayList()
 
@@ -60,9 +63,9 @@ class MapViewModel : ViewModel(), CoroutineScope {
     fun checkJob(job: Job?) = job == null || job.isCompleted
 
     fun buildRoute(
-        geoApiContext: GeoApiContext,
-        firstMarker: ParcelUserLocation?,
-        secondMarker: ParcelUserLocation?
+            geoApiContext: GeoApiContext,
+            firstMarker: ParcelUserLocation?,
+            secondMarker: ParcelUserLocation?
     ) {
         if (checkJob(locationJob)) {
             locationJob = launch(this.coroutineContext) {
@@ -73,42 +76,41 @@ class MapViewModel : ViewModel(), CoroutineScope {
         }
     }
 
-    fun postFlowValues(lastLocation: UserLocation, newLocation: UserLocation) {
+    fun postFlowValues() {
         params.let {
-            val delta = SphericalUtil.computeDistanceBetween(
-                lastLocation.toLatLng(),
-                newLocation.toLatLng()
-            )
+            val delta = lastLocation?.let { last ->
+                SphericalUtil.computeDistanceBetween(last.toLatLng(), newLocation.toLatLng())
+            } ?: 0.0
+
+            if (lastLocation == null) lastLocation = UserLocation(lat = newLocation.lat, lng = newLocation.lng)
 
             it.currentSpeed = (delta * 3.6).toInt()
 
-            if (delta != 0.0) {
-                it.currentDistance -= delta
-                trafficLights.forEach { light ->
-                    light.distance -= delta
-                }
+            it.currentDistance = SphericalUtil.computeDistanceBetween(newLocation.toLatLng(), polylinePoints.last())
+            trafficLights.forEach { light ->
+                light.distance = SphericalUtil.computeDistanceBetween(newLocation.toLatLng(), light.location)
+            }
 
-                if (isPolylineBuild) {
-                    it.trafficLightDistance -= delta
+            if (isPolylineBuild) {
+                if (trafficLights.size > 0) it.trafficLightDistance = trafficLights[0].distance
 
-                    if (it.trafficLightDistance <= 0.0) {
-                        if (trafficLights.size == 1) {
-                            it.trafficLightDistance = 0.0
-                        }
-                        if (trafficLights.size > 1) {
-                            trafficLights.removeAt(0)
-                            it.trafficLightDistance = trafficLights.getOrNull(0)?.distance ?: 0.0
-                        }
+                if (it.trafficLightDistance <= 0.0) {
+                    if (trafficLights.size == 1) {
+                        it.trafficLightDistance = 0.0
+                    }
+                    if (trafficLights.size > 1) {
+                        trafficLights.removeAt(0)
+                        it.trafficLightDistance = trafficLights.getOrNull(0)?.distance ?: 0.0
                     }
                 }
-
-                val (minimumSpeed, maximumSpeed) = computeMinAndMaxSpeed()
-
-                it.minSpeed = minimumSpeed
-                it.maxSpeed = maximumSpeed
-
-                viewStateParamsMutableLiveData.postValue(it)
             }
+
+            val (minimumSpeed, maximumSpeed) = computeMinAndMaxSpeed()
+
+            it.minSpeed = minimumSpeed
+            it.maxSpeed = maximumSpeed
+
+            viewStateParamsMutableLiveData.postValue(it)
         }
     }
 
@@ -122,24 +124,24 @@ class MapViewModel : ViewModel(), CoroutineScope {
     }
 
     private fun makePolyline(
-        geoApiContext: GeoApiContext,
-        firstMarker: ParcelUserLocation?,
-        secondMarker: ParcelUserLocation?
+            geoApiContext: GeoApiContext,
+            firstMarker: ParcelUserLocation?,
+            secondMarker: ParcelUserLocation?
     ) {
         isPolylineBuild = true
 
         //Здесь будет наш итоговый путь состоящий из набора точек
         var result: DirectionsResult? = null
         val startPoint =
-            com.google.maps.model.LatLng(firstMarker?.lat ?: 0.0, firstMarker?.lng ?: 0.0)
+                com.google.maps.model.LatLng(firstMarker?.lat ?: 0.0, firstMarker?.lng ?: 0.0)
         val endPoint =
-            com.google.maps.model.LatLng(secondMarker?.lat ?: 0.0, secondMarker?.lng ?: 0.0)
+                com.google.maps.model.LatLng(secondMarker?.lat ?: 0.0, secondMarker?.lng ?: 0.0)
 
         try {
             result = DirectionsApi.newRequest(geoApiContext)
-                .origin(startPoint)
-                .destination(endPoint)
-                .await()
+                    .origin(startPoint)
+                    .destination(endPoint)
+                    .await()
         } catch (e: ApiException) {
             e.printStackTrace()
         } catch (e: InterruptedException) {
@@ -150,7 +152,7 @@ class MapViewModel : ViewModel(), CoroutineScope {
 
         //Преобразование итогового пути в набор точек
         val path: MutableList<com.google.maps.model.LatLng>? =
-            result?.routes?.getOrNull(0)?.overviewPolyline?.decodePath()
+                result?.routes?.getOrNull(0)?.overviewPolyline?.decodePath()
         //Линия которую будем рисовать
         val line = PolylineOptions()
 
@@ -181,57 +183,26 @@ class MapViewModel : ViewModel(), CoroutineScope {
         params.trafficLightDistance = trafficLightDist
 
         viewStateParamsMutableLiveData.postValue(params)
+
+        val mainHandler = Handler(Looper.getMainLooper())
+
+        mainHandler.post(object : Runnable {
+            override fun run() {
+                postFlowValues()
+                mainHandler.postDelayed(this, 1000)
+            }
+        })
     }
 
     fun initTrafficLightList() {
-        trafficLights.add(
-            TrafficLight(
-                location = LatLng(59.93296000000001, 30.244760000000003),
-                distance = 0.0,
-                orientation = 0,
-                startGreenOffset = 53,
-                startRedOffset = 22,
-                interval = 63
-            )
-        )
-        trafficLights.add(
-            TrafficLight(
-                location = LatLng(59.93401000000001, 30.247650000000004),
-                distance = 0.0,
-                orientation = 0,
-                startGreenOffset = 76,
-                startRedOffset = 39,
-                interval = 94
-            )
-        )
-        trafficLights.add(
-            TrafficLight(
-                location = LatLng(59.9346, 30.249350000000003),
-                distance = 0.0,
-                orientation = 0,
-                startGreenOffset = 40,
-                startRedOffset = 61,
-                interval = 69
-            )
-        )
-        trafficLights.add(
-            TrafficLight(
-                location = LatLng(59.939510000000006, 30.266050000000003),
-                distance = 0.0,
-                orientation = 0,
-                startGreenOffset = 17,
-                startRedOffset = 71,
-                interval = 95
-            )
-        )
 //        trafficLights.add(
 //            TrafficLight(
 //                location = LatLng(59.93296000000001, 30.244760000000003),
 //                distance = 0.0,
 //                orientation = 0,
-//                startGreenOffset = 17,
-//                startRedOffset = 50,
-//                interval = 60
+//                startGreenOffset = 53,
+//                startRedOffset = 22,
+//                interval = 63
 //            )
 //        )
 //        trafficLights.add(
@@ -239,9 +210,9 @@ class MapViewModel : ViewModel(), CoroutineScope {
 //                location = LatLng(59.93401000000001, 30.247650000000004),
 //                distance = 0.0,
 //                orientation = 0,
-//                startGreenOffset = 51,
-//                startRedOffset = 13,
-//                interval = 95
+//                startGreenOffset = 76,
+//                startRedOffset = 39,
+//                interval = 94
 //            )
 //        )
 //        trafficLights.add(
@@ -249,9 +220,9 @@ class MapViewModel : ViewModel(), CoroutineScope {
 //                location = LatLng(59.9346, 30.249350000000003),
 //                distance = 0.0,
 //                orientation = 0,
-//                startGreenOffset = 37,
-//                startRedOffset = 56,
-//                interval = 66
+//                startGreenOffset = 40,
+//                startRedOffset = 61,
+//                interval = 69
 //            )
 //        )
 //        trafficLights.add(
@@ -259,11 +230,51 @@ class MapViewModel : ViewModel(), CoroutineScope {
 //                location = LatLng(59.939510000000006, 30.266050000000003),
 //                distance = 0.0,
 //                orientation = 0,
-//                startGreenOffset = 57,
-//                startRedOffset = 6,
-//                interval = 105
+//                startGreenOffset = 17,
+//                startRedOffset = 71,
+//                interval = 95
 //            )
 //        )
+        trafficLights.add(
+                TrafficLight(
+                        location = LatLng(59.93296000000001, 30.244760000000003),
+                        distance = 0.0,
+                        orientation = 0,
+                        startGreenOffset = 17,
+                        startRedOffset = 50,
+                        interval = 60
+                )
+        )
+        trafficLights.add(
+                TrafficLight(
+                        location = LatLng(59.93401000000001, 30.247650000000004),
+                        distance = 0.0,
+                        orientation = 0,
+                        startGreenOffset = 51,
+                        startRedOffset = 13,
+                        interval = 95
+                )
+        )
+        trafficLights.add(
+                TrafficLight(
+                        location = LatLng(59.9346, 30.249350000000003),
+                        distance = 0.0,
+                        orientation = 0,
+                        startGreenOffset = 37,
+                        startRedOffset = 56,
+                        interval = 66
+                )
+        )
+        trafficLights.add(
+                TrafficLight(
+                        location = LatLng(59.939510000000006, 30.266050000000003),
+                        distance = 0.0,
+                        orientation = 0,
+                        startGreenOffset = 57,
+                        startRedOffset = 6,
+                        interval = 105
+                )
+        )
     }
 
     private fun getRootTrafficLightDistance(): Double {
@@ -273,7 +284,7 @@ class MapViewModel : ViewModel(), CoroutineScope {
         for (point in polylinePoints) {
             trafficLights.forEach {
                 if (it.location.latitude in lastPoint.latitude..point.latitude
-                    && it.location.longitude in lastPoint.longitude..point.longitude
+                        && it.location.longitude in lastPoint.longitude..point.longitude
                 ) {
                     it.distance = sum + SphericalUtil.computeDistanceBetween(lastPoint, it.location)
                 }
