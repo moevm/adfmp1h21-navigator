@@ -161,12 +161,12 @@ class MapFragment : BaseFragment() {
     override fun onResume() {
         super.onResume()
 
-//        val date = Calendar.getInstance()
-//
-//        viewModel.initTrafficLightList()
-//
-//        date.set(2021, 4, 25, 2, 16, 42)
-//        Log.d("HIHI", ((date.time.time / 1000) % viewModel.trafficLights[3].interval).toString())
+        val date = Calendar.getInstance()
+
+        viewModel.initTrafficLightList()
+
+        date.set(2021, 4, 27, 12, 30, 15)
+        Log.d("HIHI", ((date.time.time / 1000) % viewModel.trafficLights[0].interval).toString())
 //        date.set(2021, 4, 25, 2, 17, 36)
 //        Log.d("HIHI", ((date.time.time / 1000) % viewModel.trafficLights[3].interval).toString())
 

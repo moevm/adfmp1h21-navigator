@@ -309,10 +309,6 @@ class MapViewModel : ViewModel(), CoroutineScope {
 
             greenSpeed = min(greenSpeed, MAX_SPEED)
             redSpeed = min(redSpeed, MAX_SPEED)
-
-//            Log.d("HAHA", "$currentOffset $greenOffset $redOffset")
-//
-//            Log.d("HAHA", "$greenSpeed $redSpeed")
         }
 
         return min(greenSpeed, redSpeed) to max(greenSpeed, redSpeed)
