@@ -24,6 +24,8 @@
     <string name="input_error">Please, fill all fields</string>
     <string name="action_cancel">Cancel</string>
     <string name="ok">OK</string>
+    <string name="city_delimiter" translatable="false">, Санкт-Петербург</string>
+    <string name="enter_another_address">Enter another address</string>
 
     <string-array name="months_array">
         <item>January</item>

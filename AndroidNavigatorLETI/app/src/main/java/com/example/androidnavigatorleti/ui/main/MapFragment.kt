@@ -1,26 +1,40 @@
 package com.example.androidnavigatorleti.ui.main
 
 import android.content.Context
+import android.location.Geocoder
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import com.example.androidnavigatorleti.R
 import androidx.navigation.fragment.navArgs
 import com.example.androidnavigatorleti.*
 import com.example.androidnavigatorleti.base.BaseFragment
+import com.example.androidnavigatorleti.data.ParcelUserLocation
 import com.example.androidnavigatorleti.data.UserLocation
 import com.example.androidnavigatorleti.preferences.SharedPreferencesManager.Keys.LAT_KEY
 import com.example.androidnavigatorleti.preferences.SharedPreferencesManager.Keys.LNG_KEY
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
-import com.example.androidnavigatorleti.R
+import com.google.android.gms.maps.model.Marker
+import com.google.android.gms.maps.model.MarkerOptions
 import kotlinx.android.synthetic.main.fragment_map.*
 import kotlinx.coroutines.*
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStream
+import java.io.InputStreamReader
+import java.net.HttpURLConnection
+import java.net.URL
 import kotlin.coroutines.CoroutineContext
 
 
@@ -37,6 +51,9 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
 
     private var map: GoogleMap? = null
 
+    private var firstMarker: Marker? = null
+    private var secondMarker: Marker? = null
+
     private var permissionGranted = false
     private lateinit var lm: LocationManager
 
@@ -46,7 +63,7 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
     private lateinit var locationRequest: LocationRequest
     private lateinit var locationCallback: LocationCallback
 
-    val args: MapFragmentArgs by navArgs()
+    private val args: MapFragmentArgs by navArgs()
 
     private val job = SupervisorJob()
 
@@ -87,11 +104,38 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
             }
         }
 
-        if (args.setMarker) {
+        if (args.setFirstMarker) {
             root_button_page.visibility = View.VISIBLE
             my_location_floating_button.visibility = View.GONE
+            my_location_button.setOnClickListener {
+                firstMarker?.remove()
+                showMyLocationWithMarker()
+            }
             choose_button.setOnClickListener {
-                openFragment(R.id.search)
+                val markerLocation: LatLng? = firstMarker?.position
+                val direction = MapFragmentDirections.actionFirstMarkerSet(ParcelUserLocation(
+                    markerLocation!!.latitude,
+                    markerLocation.longitude
+                ))
+                openFragment(direction)
+            }
+        }
+
+        if (args.setSecondMarker) {
+            root_button_page.visibility = View.VISIBLE
+            my_location_floating_button.visibility = View.GONE
+            my_location_button.setOnClickListener {
+                secondMarker?.remove()
+                showMyLocationWithMarker()
+            }
+            choose_button.setOnClickListener {
+                val firstMarkerLocation: LatLng? = firstMarker?.position
+                val secondMarkerLocation: LatLng? = secondMarker?.position
+                val direction = MapFragmentDirections.actionAllMarkersSet(
+                    ParcelUserLocation(firstMarkerLocation!!.latitude, firstMarkerLocation.longitude),
+                    ParcelUserLocation(secondMarkerLocation!!.latitude, secondMarkerLocation.longitude)
+                )
+                openFragment(direction)
             }
         }
     }
@@ -185,6 +229,11 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
     fun showMap() {
         map_view.getMapAsync { googleMap ->
             map = googleMap.apply {
+                //Show user location with delay
+                Handler(Looper.getMainLooper()).postDelayed(Runnable {
+                    showMyLocationWithMarker()
+                },500)
+
                 uiSettings.isMyLocationButtonEnabled = false
                 uiSettings.isMapToolbarEnabled = false
 
@@ -193,8 +242,25 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
                     map_view.visibility = View.VISIBLE
                 }
 
-                setOnMapLongClickListener {
-                    openFragment(R.id.search)
+
+
+                val geocoder = Geocoder(requireActivity())
+
+                //Log.d("HIHI", geocoder.getFromLocationName("21-я лин. В.О., 010Г", 1).toString())
+
+                if (!args.setFirstMarker && !args.setSecondMarker) {
+                    setOnMapLongClickListener {
+                        val direction = MapFragmentDirections.actionMapLongClick(ParcelUserLocation(it.latitude, it.longitude))
+                        openFragment(direction)
+//                    val loc = geocoder.getFromLocation(it.latitude, it.longitude, 1)
+//                    val direction = MapFragmentDirections.actionMapLongClick(loc[0].getAddressLine(0).toString())
+//
+//                    val test = NavigatorApp.userDao.getLocation()
+//                    val res = requestDirection(getRequestedUrl(it, LatLng(test.lat, test.lng)) ?: "")
+//                    Log.d("HIHI", "$res abc")
+
+                        //Log.d("HIHI", geocoder.getFromLocationName(loc[0].getAddressLine(0).toString(), 1).toString())
+                    }
                 }
             }
 
@@ -205,6 +271,96 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
                 requestLocationPermissions()
             }
         }
+    }
+
+    private fun showMyLocationWithMarker() {
+        val userLoc = NavigatorApp.userDao.getLocation()
+        showLocation(userLoc, permissionGranted, true)
+
+        if (args.setFirstMarker) {
+            firstMarker = map?.addMarker(
+                MarkerOptions().position(LatLng(userLoc.lat, userLoc.lng)).draggable(true)
+            )
+
+            map?.setOnMarkerDragListener(object : GoogleMap.OnMarkerDragListener {
+                override fun onMarkerDragEnd(p0: Marker?) {
+                    firstMarker?.position = p0?.position
+                }
+
+                override fun onMarkerDragStart(p0: Marker?) {}
+
+                override fun onMarkerDrag(p0: Marker?) {}
+            })
+        }
+
+        if (args.setSecondMarker) {
+            firstMarker = map?.addMarker(
+                MarkerOptions().position(LatLng(args.secondMarker!!.lat, args.secondMarker!!.lng)).draggable(false)
+            )
+
+            secondMarker = map?.addMarker(
+                MarkerOptions()
+                    .position(LatLng(userLoc.lat, userLoc.lng))
+                    .draggable(true)
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
+            )
+
+            map?.setOnMarkerDragListener(object : GoogleMap.OnMarkerDragListener {
+                override fun onMarkerDragEnd(p0: Marker?) {
+                    secondMarker?.position = p0?.position
+                }
+
+                override fun onMarkerDragStart(p0: Marker?) {}
+
+                override fun onMarkerDrag(p0: Marker?) {}
+            })
+        }
+    }
+
+    private fun getRequestedUrl(origin: LatLng, destination: LatLng): String? {
+        val strOrigin = "origin=" + origin.latitude + "," + origin.longitude
+        val strDestination =
+            "destination=" + destination.latitude + "," + destination.longitude
+        val sensor = "sensor=false"
+        val mode = "mode=driving"
+        val param = "$strOrigin&$strDestination&$sensor&$mode"
+        val output = "json"
+        val APIKEY = resources.getString(R.string.google_maps_key)
+        return "https://maps.googleapis.com/maps/api/directions/$output?$param$APIKEY"
+    }
+
+    private fun requestDirection(requestedUrl: String): String? {
+        var responseString = ""
+        var inputStream: InputStream? = null
+        var httpURLConnection: HttpURLConnection? = null
+        try {
+            val url = URL(requestedUrl)
+            httpURLConnection = url.openConnection() as HttpURLConnection
+            httpURLConnection.connect()
+            inputStream = httpURLConnection.inputStream
+            val reader = InputStreamReader(inputStream)
+            val bufferedReader = BufferedReader(reader)
+            val stringBuffer = StringBuffer()
+            var line: String? = ""
+            while (bufferedReader.readLine().also { line = it } != null) {
+                stringBuffer.append(line)
+            }
+            responseString = stringBuffer.toString()
+            bufferedReader.close()
+            reader.close()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            if (inputStream != null) {
+                try {
+                    inputStream.close()
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                }
+            }
+        }
+        httpURLConnection?.disconnect()
+        return responseString
     }
 
     private fun getDeviceLocation(permissionIsGranted: Boolean) {

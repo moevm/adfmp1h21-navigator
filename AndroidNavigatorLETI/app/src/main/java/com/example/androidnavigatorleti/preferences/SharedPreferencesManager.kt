@@ -56,8 +56,6 @@ class SharedPreferencesManager(context: Context) {
 
         const val LAT_KEY = "LAT_KEY"
         const val LNG_KEY = "LNG_KEY"
-        const val NAME = "name"
-        const val SURNAME = "surname"
-        const val BIRTH_DATE = "birth_date"
+        const val HISTORY_ENABLED = "history_enabled"
     }
 }
