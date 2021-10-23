@@ -1,4 +1,4 @@
-package com.example.androidnavigatorleti.ui
+package com.example.androidnavigatorleti.ui.about
 
 import android.os.Bundle
 import android.view.LayoutInflater

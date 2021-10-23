@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">AndroidNavigatorLETI</string>
-    <string name="title_activity_maps">Map</string>
+    <string name="title_activity_maps">Navigator LETI</string>
     <string name="settings">Settings</string>
     <string name="about">About</string>
     <string name="about_text">Our app is best app in the world!</string>
@@ -26,6 +26,12 @@
     <string name="ok">OK</string>
     <string name="city_delimiter" translatable="false">, Санкт-Петербург</string>
     <string name="enter_another_address">Enter another address</string>
+    <string name="enter_address">Enter address</string>
+    <string name="route_time_text_min">~ %s min</string>
+    <string name="route_time_text_hours">~ %s hours %s min</string>
+    <string name="enable_location">You should enable geo location to use app</string>
+    <string name="meters" translatable="false">%s m</string>
+    <string name="kilometers" translatable="false">%s km</string>
 
     <string-array name="months_array">
         <item>January</item>

@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">AndroidNavigatorLETI</string>
-    <string name="title_activity_maps">Карта</string>
+    <string name="title_activity_maps">Навигатор ЛЭТИ</string>
     <string name="settings">Настройки</string>
     <string name="about">О программе</string>
     <string name="about_text">Наше приложение - самое лучшее приложение!</string>
@@ -25,4 +25,8 @@
     <string name="action_cancel">Отмена</string>
     <string name="ok">ОК</string>
     <string name="enter_another_address">Введите другой адрес</string>
+    <string name="enter_address">Введите адрес</string>
+    <string name="route_time_text_min">~ %s минут</string>
+    <string name="route_time_text_hours">~ %s часов %s минут</string>
+    <string name="enable_location">Вам следует разрешить геолокацию, чтобы использовать приложение</string>
 </resources>

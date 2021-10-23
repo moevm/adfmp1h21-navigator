@@ -13,7 +13,7 @@ class NavigatorApp : Application() {
         db = Room.databaseBuilder(
             baseContext,
             UserDatabase::class.java,
-            "NoteDatabase"
+            "NavigatorDatabase"
         ).allowMainThreadQueries()
             .fallbackToDestructiveMigration()
             .build()

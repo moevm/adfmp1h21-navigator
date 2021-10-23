@@ -7,6 +7,6 @@ import androidx.room.PrimaryKey
 
 @Entity
 data class SearchHistoryItem(
-    @PrimaryKey(autoGenerate = true) var id: Long? = null,
-    @ColumnInfo(name = "place") val place: String = ""
+    @PrimaryKey(autoGenerate = true) var id: Int = 0,
+    @ColumnInfo(name = "place_name") val place: String = ""
 )

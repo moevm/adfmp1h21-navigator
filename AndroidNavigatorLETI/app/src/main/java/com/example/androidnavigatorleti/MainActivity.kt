@@ -29,7 +29,8 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowHomeEnabled(true)
-        val host: NavHostFragment = supportFragmentManager.findFragmentById(R.id.my_nav_host_fragment) as NavHostFragment? ?: return
+        val host: NavHostFragment = supportFragmentManager.findFragmentById(R.id.my_nav_host_fragment) as NavHostFragment?
+                ?: return
         val navController = host.navController
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_nav_view)
         bottomNav?.setupWithNavController(navController)
@@ -39,11 +40,10 @@ class MainActivity : AppCompatActivity() {
         navController.addOnDestinationChangedListener(onDestinationChangedListener)
 
         db = Room.databaseBuilder(
-            applicationContext,
-            UserDatabase::class.java, "androidnavigatorleti"
+                applicationContext,
+                UserDatabase::class.java, "androidnavigatorleti"
         ).build()
     }
-
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
@@ -54,5 +54,4 @@ class MainActivity : AppCompatActivity() {
         }
         return super.onOptionsItemSelected(item)
     }
-
 }

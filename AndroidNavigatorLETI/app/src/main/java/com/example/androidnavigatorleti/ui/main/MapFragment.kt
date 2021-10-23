@@ -1,74 +1,72 @@
 package com.example.androidnavigatorleti.ui.main
 
 import android.content.Context
-import android.location.Geocoder
+import android.content.Intent
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.example.androidnavigatorleti.R
+import android.widget.Toast
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Observer
 import androidx.navigation.fragment.navArgs
-import com.example.androidnavigatorleti.*
+import com.example.androidnavigatorleti.PERMISSION_REQUEST_CODE
+import com.example.androidnavigatorleti.R
 import com.example.androidnavigatorleti.base.BaseFragment
+import com.example.androidnavigatorleti.checkLocationPermission
 import com.example.androidnavigatorleti.data.ParcelUserLocation
 import com.example.androidnavigatorleti.data.UserLocation
+import com.example.androidnavigatorleti.data.toLatLng
 import com.example.androidnavigatorleti.preferences.SharedPreferencesManager.Keys.LAT_KEY
 import com.example.androidnavigatorleti.preferences.SharedPreferencesManager.Keys.LNG_KEY
+import com.example.androidnavigatorleti.requestLocationPermissions
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Marker
-import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.*
+import com.google.maps.GeoApiContext
+import com.google.maps.android.SphericalUtil
+import kotlinx.android.synthetic.main.distance_container.*
+import kotlinx.android.synthetic.main.distance_container.view.*
 import kotlinx.android.synthetic.main.fragment_map.*
-import kotlinx.coroutines.*
-import java.io.BufferedReader
-import java.io.IOException
-import java.io.InputStream
-import java.io.InputStreamReader
-import java.net.HttpURLConnection
-import java.net.URL
-import kotlin.coroutines.CoroutineContext
+import kotlinx.android.synthetic.main.search_item.*
+import kotlinx.android.synthetic.main.speed_container.view.*
+import kotlinx.coroutines.Runnable
+import java.util.*
+import kotlin.math.floor
 
 
-class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
+class MapFragment : BaseFragment() {
 
     companion object {
 
         private const val DEFAULT_ZOOM = 12f
-        private const val DELTA_ZOOM = 1.5f
         private const val ZOOM_SPEED = 400
-        private const val DEFAULT_USER_LATITUDE = 30.315492
-        private const val DEFAULT_USER_LONGITUDE = 59.939007
     }
 
-    private var map: GoogleMap? = null
+    private val viewModel: MapViewModel by viewModels()
+    private val args: MapFragmentArgs by navArgs()
 
+    private var map: GoogleMap? = null
     private var firstMarker: Marker? = null
     private var secondMarker: Marker? = null
-
     private var permissionGranted = false
+
+    private var polyLine: Polyline? = null
+    private var locButtonClicked = false
+
     private lateinit var lm: LocationManager
-
-    private var locationJob: Job? = null
-
     private lateinit var mFusedLocationClient: FusedLocationProviderClient
     private lateinit var locationRequest: LocationRequest
     private lateinit var locationCallback: LocationCallback
-
-    private val args: MapFragmentArgs by navArgs()
-
-    private val job = SupervisorJob()
-
-    override val coroutineContext: CoroutineContext
-        get() = job + Dispatchers.Main
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -81,43 +79,43 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
 
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? =
         inflater.inflate(R.layout.fragment_map, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
 
         map_view.onCreate(savedInstanceState)
         showMap()
 
         if (permissionGranted) startLocationUpdates()
 
-        if (args.makeRoot) {
-            close_floating_button.visibility = View.VISIBLE
-            search_container.visibility = View.VISIBLE
-            my_location_floating_button.visibility = View.GONE
-            close_floating_button.setOnClickListener {
-                close_floating_button.visibility = View.GONE
-                search_container.visibility = View.GONE
-                my_location_floating_button.visibility = View.VISIBLE
-            }
-        }
+        if (args.makeRoot) makeRoot()
+
 
         if (args.setFirstMarker) {
             root_button_page.visibility = View.VISIBLE
             my_location_floating_button.visibility = View.GONE
             my_location_button.setOnClickListener {
                 firstMarker?.remove()
-                showMyLocationWithMarker()
+                showMarkerOnMap()
             }
             choose_button.setOnClickListener {
                 val markerLocation: LatLng? = firstMarker?.position
-                val direction = MapFragmentDirections.actionFirstMarkerSet(ParcelUserLocation(
-                    markerLocation!!.latitude,
-                    markerLocation.longitude
-                ))
-                openFragment(direction)
+
+                if (markerLocation != null) {
+                    val direction = MapFragmentDirections.actionFirstMarkerSet(
+                        ParcelUserLocation(
+                            markerLocation.latitude,
+                            markerLocation.longitude
+                        )
+                    )
+                    openFragment(direction)
+                }
             }
         }
 
@@ -126,15 +124,29 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
             my_location_floating_button.visibility = View.GONE
             my_location_button.setOnClickListener {
                 secondMarker?.remove()
-                showMyLocationWithMarker()
+                showMarkerOnMap()
             }
             choose_button.setOnClickListener {
                 val firstMarkerLocation: LatLng? = firstMarker?.position
                 val secondMarkerLocation: LatLng? = secondMarker?.position
-                val direction = MapFragmentDirections.actionAllMarkersSet(
-                    ParcelUserLocation(firstMarkerLocation!!.latitude, firstMarkerLocation.longitude),
-                    ParcelUserLocation(secondMarkerLocation!!.latitude, secondMarkerLocation.longitude)
-                )
+
+                val firstParcelUserLoc = firstMarkerLocation?.let {
+                    ParcelUserLocation(it.latitude, it.longitude)
+                }
+                val secondParcelUserLoc = secondMarkerLocation?.let {
+                    ParcelUserLocation(it.latitude, it.longitude)
+                }
+                val direction = if (args.setFirstMarkerWithSecond) {
+                    MapFragmentDirections.actionAllMarkersSet(
+                        secondParcelUserLoc,
+                        firstParcelUserLoc
+                    )
+                } else {
+                    MapFragmentDirections.actionAllMarkersSet(
+                        firstParcelUserLoc,
+                        secondParcelUserLoc
+                    )
+                }
                 openFragment(direction)
             }
         }
@@ -149,9 +161,19 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
     override fun onResume() {
         super.onResume()
 
+        val date = Calendar.getInstance()
+
+        viewModel.initTrafficLightList()
+
+        date.set(2021, 4, 27, 12, 30, 15)
+        Log.d("HIHI", ((date.time.time / 1000) % viewModel.trafficLights[0].interval).toString())
+//        date.set(2021, 4, 25, 2, 17, 36)
+//        Log.d("HIHI", ((date.time.time / 1000) % viewModel.trafficLights[3].interval).toString())
+
         map_view.onResume()
         my_location_floating_button.setOnClickListener {
-            val newLocation = NavigatorApp.userDao.getLocation()
+            val newLocation = getLocation()
+            locButtonClicked = true
             showLocation(newLocation, permissionGranted, true)
         }
     }
@@ -174,7 +196,11 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
         super.onDestroy()
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
         when (requestCode) {
             PERMISSION_REQUEST_CODE -> {
                 permissionGranted = requireContext().checkLocationPermission()
@@ -182,24 +208,121 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
                 if (permissionGranted) {
                     startLocationUpdates()
                     map?.isMyLocationEnabled = true
-                }
+                } else {
+                    Toast.makeText(
+                        requireContext(),
+                        getString(R.string.enable_location),
+                        Toast.LENGTH_LONG
+                    ).show()
+                    startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                        data = Uri.fromParts("package", requireContext().packageName, null)
+                        addCategory(Intent.CATEGORY_DEFAULT)
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
+                        addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS)
+                    })
+                    permissionGranted = requireContext().checkLocationPermission()
 
-                //getDeviceLocation(permissionGranted)
+                    if (permissionGranted) {
+                        restartApp()
+                    } else {
+                        requireActivity().finish()
+                    }
+                }
             }
         }
     }
 
-    override fun onLocationChanged(p0: Location) {
-        val newLocation = UserLocation(0, p0.latitude, p0.longitude)
-        saveUserLocation(newLocation)
+    private fun formatDistance(distance: Double): String {
+        return if (distance > 1000.0) {
+            getString(R.string.kilometers, String.format("%.1f", distance / 1000.0))
+        } else {
+            getString(R.string.meters, String.format("%.0f", distance))
+        }
+    }
+
+    private fun makeRoot() {
+        val geoApiContext = GeoApiContext().setApiKey(getString(R.string.google_maps_key))
+
+        speed_layout?.visibility = View.VISIBLE
+        distance_layout?.visibility = View.VISIBLE
+        close_floating_button.visibility = View.VISIBLE
+        my_location_floating_button.visibility = View.GONE
+
+        viewModel.buildRoute(geoApiContext, args.firstMarker, args.secondMarker)
+
+        viewModel.polyLineLiveData.observe(viewLifecycleOwner, Observer { options ->
+            //Добавляем линию на карту
+            options?.let {
+                polyLine = map?.addPolyline(it)
+                showDoubleBlockedMarkers()
+                showMarkerLocation()
+            }
+//            polylinePoints.forEach {
+//                map?.addMarker(MarkerOptions().position(LatLng(it.latitude, it.longitude)).draggable(false))
+//            }
+        })
+
+        close_floating_button.setOnClickListener {
+            viewModel.isPolylineBuild = false
+            speed_layout?.visibility = View.GONE
+            distance_layout?.visibility = View.GONE
+            close_floating_button.visibility = View.GONE
+            my_location_floating_button.visibility = View.VISIBLE
+            removeMarkers()
+            polyLine?.remove()
+        }
+
+        viewModel.collectFlows()
+
+        viewModel.viewStateParamsLiveData.observe(
+            viewLifecycleOwner,
+            Observer { params ->
+                speed_layout?.current_speed?.text = params.currentSpeed.toString()
+                speed_layout?.min_speed?.text = params.minSpeed.toString()
+                speed_layout?.max_speed?.text = params.maxSpeed.toString()
+                distance_layout?.traffic_distance?.text = formatDistance(params.trafficLightDistance)
+                distance_layout?.point_distance?.text = formatDistance(params.currentDistance)
+            }
+        )
+    }
+
+    private fun restartApp(action: String? = null) {
+        val i = requireContext().packageManager
+            .getLaunchIntentForPackage(requireContext().packageName)?.apply {
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                if (action != null) setAction(action)
+                putExtra("open_app", true)
+            }
+        startActivity(i)
+    }
+
+    private fun countDistance(
+        startPoint: com.google.maps.model.LatLng,
+        endPoint: com.google.maps.model.LatLng
+    ): String {
+        val distance = SphericalUtil.computeDistanceBetween(
+            LatLng(startPoint.lat, startPoint.lng),
+            LatLng(endPoint.lat, endPoint.lng)
+        )
+
+        val time = floor(distance / 1000 * 2.5).toInt()
+
+        return if (time >= 60) {
+            val hours = time / 60
+            val minutes = time % 60
+            getString(R.string.route_time_text_hours, hours.toString(), minutes.toString())
+        } else {
+            getString(R.string.route_time_text_min, time.toString())
+        }
     }
 
     private fun buildLocationRequest() {
         locationRequest = LocationRequest()
         locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-        locationRequest.interval = 100
-        locationRequest.fastestInterval = 100
-        locationRequest.smallestDisplacement = 1f
+        locationRequest.interval = 1000
+        locationRequest.fastestInterval = 1000
+        locationRequest.smallestDisplacement = 5f
     }
 
     private fun startLocationUpdates() {
@@ -220,62 +343,65 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
                 for (location in locationResult.locations) {
                     val latitude = location.latitude
                     val longitude = location.longitude
-                    saveUserLocation(UserLocation(lat = latitude, lng = longitude))
+
+                    val oldLoc = getLocation()
+                    val newLoc = UserLocation(lat = latitude, lng = longitude)
+
+                    viewModel.newLocation = newLoc
+
+                    if (locButtonClicked && oldLoc.lat != latitude && oldLoc.lng != longitude) {
+                        showLocation(newLoc, permissionGranted, true)
+                    } else {
+                        locButtonClicked = false
+                    }
+                    saveUserLocation(newLoc)
                 }
             }
         }
     }
 
-    fun showMap() {
+    private fun showMap() {
         map_view.getMapAsync { googleMap ->
             map = googleMap.apply {
                 //Show user location with delay
                 Handler(Looper.getMainLooper()).postDelayed(Runnable {
-                    showMyLocationWithMarker()
-                },500)
+                    showMarkerOnMap()
+                }, 500)
 
                 uiSettings.isMyLocationButtonEnabled = false
                 uiSettings.isMapToolbarEnabled = false
 
                 setOnMapLoadedCallback {
-                    loading_page.visibility = View.GONE
-                    map_view.visibility = View.VISIBLE
+                    loading_page?.visibility = View.GONE
+                    map_view?.visibility = View.VISIBLE
                 }
-
-
-
-                val geocoder = Geocoder(requireActivity())
-
-                //Log.d("HIHI", geocoder.getFromLocationName("21-я лин. В.О., 010Г", 1).toString())
 
                 if (!args.setFirstMarker && !args.setSecondMarker) {
                     setOnMapLongClickListener {
-                        val direction = MapFragmentDirections.actionMapLongClick(ParcelUserLocation(it.latitude, it.longitude))
+                        val direction = MapFragmentDirections.actionMapLongClick(
+                            ParcelUserLocation(
+                                it.latitude,
+                                it.longitude
+                            )
+                        )
                         openFragment(direction)
-//                    val loc = geocoder.getFromLocation(it.latitude, it.longitude, 1)
-//                    val direction = MapFragmentDirections.actionMapLongClick(loc[0].getAddressLine(0).toString())
-//
-//                    val test = NavigatorApp.userDao.getLocation()
-//                    val res = requestDirection(getRequestedUrl(it, LatLng(test.lat, test.lng)) ?: "")
-//                    Log.d("HIHI", "$res abc")
-
-                        //Log.d("HIHI", geocoder.getFromLocationName(loc[0].getAddressLine(0).toString(), 1).toString())
                     }
                 }
             }
 
             if (permissionGranted) {
                 map?.isMyLocationEnabled = true
-                //getDeviceLocation(permissionGranted)
             } else {
                 requestLocationPermissions()
             }
         }
     }
 
-    private fun showMyLocationWithMarker() {
-        val userLoc = NavigatorApp.userDao.getLocation()
-        showLocation(userLoc, permissionGranted, true)
+    private fun showMarkerOnMap() {
+        val userLoc = getLocation()
+        if (!args.makeRoot) {
+            showLocation(userLoc, permissionGranted, true)
+        }
 
         if (args.setFirstMarker) {
             firstMarker = map?.addMarker(
@@ -294,9 +420,11 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
         }
 
         if (args.setSecondMarker) {
-            firstMarker = map?.addMarker(
-                MarkerOptions().position(LatLng(args.secondMarker!!.lat, args.secondMarker!!.lng)).draggable(false)
-            )
+            args.secondMarker?.let {
+                firstMarker = map?.addMarker(
+                    MarkerOptions().position(LatLng(it.lat, it.lng)).draggable(false)
+                )
+            }
 
             secondMarker = map?.addMarker(
                 MarkerOptions()
@@ -317,105 +445,38 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
         }
     }
 
-    private fun getRequestedUrl(origin: LatLng, destination: LatLng): String? {
-        val strOrigin = "origin=" + origin.latitude + "," + origin.longitude
-        val strDestination =
-            "destination=" + destination.latitude + "," + destination.longitude
-        val sensor = "sensor=false"
-        val mode = "mode=driving"
-        val param = "$strOrigin&$strDestination&$sensor&$mode"
-        val output = "json"
-        val APIKEY = resources.getString(R.string.google_maps_key)
-        return "https://maps.googleapis.com/maps/api/directions/$output?$param$APIKEY"
-    }
-
-    private fun requestDirection(requestedUrl: String): String? {
-        var responseString = ""
-        var inputStream: InputStream? = null
-        var httpURLConnection: HttpURLConnection? = null
-        try {
-            val url = URL(requestedUrl)
-            httpURLConnection = url.openConnection() as HttpURLConnection
-            httpURLConnection.connect()
-            inputStream = httpURLConnection.inputStream
-            val reader = InputStreamReader(inputStream)
-            val bufferedReader = BufferedReader(reader)
-            val stringBuffer = StringBuffer()
-            var line: String? = ""
-            while (bufferedReader.readLine().also { line = it } != null) {
-                stringBuffer.append(line)
-            }
-            responseString = stringBuffer.toString()
-            bufferedReader.close()
-            reader.close()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        } finally {
-            if (inputStream != null) {
-                try {
-                    inputStream.close()
-                } catch (e: IOException) {
-                    e.printStackTrace()
-                }
-            }
-        }
-        httpURLConnection?.disconnect()
-        return responseString
-    }
-
-    private fun getDeviceLocation(permissionIsGranted: Boolean) {
-        if (checkJob(locationJob)) {
-            locationJob = launch(this.coroutineContext) {
-                withContext(Dispatchers.IO) {
-                    val location = getCurrentUserLocation()
-                    if (location == null && permissionIsGranted) {
-                        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
-                        mFusedLocationClient.lastLocation.addOnCompleteListener { task ->
-                            val lastLocation = task.result
-                            if (lastLocation != null) {
-                                showLocation(UserLocation(lat = lastLocation.latitude, lng = lastLocation.longitude), permissionIsGranted)
-                            } else {
-                                showLocation(getDefaultUserLocation(), permissionIsGranted)
-                            }
-                        }
-                    } else {
-                        withContext(Dispatchers.Main) {
-                            showLocation(location, permissionIsGranted)
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private fun getCurrentUserLocation(): UserLocation? {
-        getCurrentLocation()
-        return getUserLocation()
-    }
-
-    private fun getCurrentLocation() = try {
-        lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0L, 0f, this)
-        lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0L, 0f, this)
-    } catch (e: SecurityException) {
-        getUserLocation()
-    }
-
-    private fun getUserLocation(): UserLocation? =
-            UserLocation(
-                    lat = prefsManager.getDouble(LAT_KEY, -1.0),
-                    lng = prefsManager.getDouble(LNG_KEY, -1.0)
+    private fun showDoubleBlockedMarkers() {
+        args.firstMarker?.let {
+            firstMarker = map?.addMarker(
+                MarkerOptions().position(LatLng(it.lat, it.lng)).draggable(false)
             )
+        }
+
+        args.secondMarker?.let {
+            secondMarker = map?.addMarker(
+                MarkerOptions()
+                    .position(LatLng(it.lat, it.lng))
+                    .draggable(false)
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
+            )
+        }
+    }
+
+    private fun removeMarkers() {
+        firstMarker?.remove()
+        secondMarker?.remove()
+    }
 
     private fun saveUserLocation(location: UserLocation) {
-        NavigatorApp.userDao.insertLocation(location)
+        setLocation(location)
         prefsManager.putDouble(LAT_KEY, location.lat)
         prefsManager.putDouble(LNG_KEY, location.lng)
     }
 
     private fun showLocation(
-            location: UserLocation?,
-            permissionIsGranted: Boolean,
-            resetZoom: Boolean = true
+        location: UserLocation?,
+        permissionIsGranted: Boolean,
+        resetZoom: Boolean = true
     ) {
         if (location != null && permissionIsGranted && lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
             showDeviceLocation(location, resetZoom)
@@ -429,14 +490,26 @@ class MapFragment : BaseFragment(), CoroutineScope, LocationListener {
         showDeviceLocation(UserLocation(lat = defaultLatLng.lat, lng = defaultLatLng.lng), true)
     }
 
-    private fun getDefaultUserLocation(): UserLocation? =
-            UserLocation(lat = DEFAULT_USER_LATITUDE, lng = DEFAULT_USER_LONGITUDE)
-
     private fun showDeviceLocation(location: UserLocation?, resetZoom: Boolean) {
         map?.animateCamera(
-                CameraUpdateFactory.newLatLngZoom(LatLng(location!!.lat, location.lng),
-                        if (resetZoom) DEFAULT_ZOOM else map?.cameraPosition?.zoom ?: DEFAULT_ZOOM),
-                ZOOM_SPEED,
-                null)
+            CameraUpdateFactory.newLatLngZoom(
+                LatLng(location?.lat ?: 0.0, location?.lng ?: 0.0),
+                if (resetZoom) DEFAULT_ZOOM else map?.cameraPosition?.zoom ?: DEFAULT_ZOOM
+            ),
+            ZOOM_SPEED,
+            null
+        )
+    }
+
+    private fun showMarkerLocation() {
+        val builder =
+            LatLngBounds.builder().include(firstMarker!!.position).include(secondMarker!!.position)
+        val bounds = builder.build()
+
+        val width = resources.displayMetrics.widthPixels
+        val height = resources.displayMetrics.heightPixels
+        val padding = (width * 0.10).toInt() // offset from edges of the map 10% of screen
+
+        map?.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, width, height, padding))
     }
 }
