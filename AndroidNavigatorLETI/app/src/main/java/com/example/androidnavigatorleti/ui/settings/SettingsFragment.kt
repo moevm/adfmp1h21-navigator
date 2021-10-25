@@ -17,6 +17,11 @@ import kotlinx.android.synthetic.main.settings_switch.view.*
 
 class SettingsFragment: BaseFragment<SettingsViewModel, EmptyViewState>(R.layout.fragment_settings) {
 
+    companion object {
+
+        private const val SCHEME = "package"
+    }
+
     override val viewModel: SettingsViewModel by viewModels()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -33,7 +38,7 @@ class SettingsFragment: BaseFragment<SettingsViewModel, EmptyViewState>(R.layout
                     requestLocationPermissions()
                 } else {
                     startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                        data = Uri.fromParts("package", context.packageName, null)
+                        data = Uri.fromParts(SCHEME, context.packageName, null)
                         addCategory(Intent.CATEGORY_DEFAULT)
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
