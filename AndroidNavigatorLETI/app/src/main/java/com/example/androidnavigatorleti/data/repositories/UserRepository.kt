@@ -1,7 +1,7 @@
 package com.example.androidnavigatorleti.data.repositories
 
-import com.example.androidnavigatorleti.data.room.tables.SearchHistoryItem
-import com.example.androidnavigatorleti.data.room.tables.UserInfo
+import com.example.androidnavigatorleti.data.domain.SearchHistoryItem
+import com.example.androidnavigatorleti.data.domain.UserInfo
 
 interface UserRepository {
 
@@ -11,7 +11,7 @@ interface UserRepository {
 
     fun insertUser(info: UserInfo)
 
-    fun deleteHistoryItem(item: SearchHistoryItem)
+    fun deleteHistoryItem(itemDatabase: SearchHistoryItem)
 
-    fun addSearchHistoryItem(item: SearchHistoryItem)
+    fun addSearchHistoryItem(itemDatabase: SearchHistoryItem)
 }

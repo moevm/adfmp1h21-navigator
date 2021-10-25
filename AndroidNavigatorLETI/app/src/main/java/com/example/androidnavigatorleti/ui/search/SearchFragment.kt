@@ -2,34 +2,27 @@ package com.example.androidnavigatorleti.ui.search
 
 import android.location.Geocoder
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.Toast
+import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.navArgs
 import com.example.androidnavigatorleti.R
-import com.example.androidnavigatorleti.base.BaseFragment
+import com.example.androidnavigatorleti.data.domain.SearchHistoryItem
+import com.example.androidnavigatorleti.ui.base.BaseFragment
+import com.example.androidnavigatorleti.ui.base.EmptyViewState
 import com.example.androidnavigatorleti.data.domain.UserLocation
-import com.example.androidnavigatorleti.data.room.tables.SearchHistoryItem
-import com.example.androidnavigatorleti.data.preferences.SharedPreferencesManager.Keys.HISTORY_ENABLED
 import kotlinx.android.synthetic.main.fragment_search.*
 
-class SearchFragment : BaseFragment() {
+class SearchFragment : BaseFragment<SearchViewModel, EmptyViewState>(R.layout.fragment_search) {
+
+    override val viewModel: SearchViewModel by viewModels()
 
     private val args: SearchFragmentArgs by navArgs()
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        setHasOptionsMenu(true)
-        return inflater.inflate(R.layout.fragment_search, container, false)
-    }
-
-    private val viewModel: SearchViewModel by viewModels()
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        setHasOptionsMenu(true)
 
         val geocoder = Geocoder(requireActivity())
 
@@ -38,7 +31,7 @@ class SearchFragment : BaseFragment() {
         }
 
         args.point?.let {
-            val userLoc = getLocation()
+            val userLoc = viewModel.getLocation()
             val userLocName = geocoder.getFromLocation(userLoc.lat, userLoc.lng, 1).getOrNull(0)
                 ?.getAddressLine(0)
 
@@ -107,7 +100,7 @@ class SearchFragment : BaseFragment() {
         }
 
         make_root_button.setOnClickListener {
-            if (prefsManager.getBoolean(HISTORY_ENABLED, false)) {
+            if (viewModel.isHistoryEnabled()) {
                 val list = viewModel.getSearchHistory()
                 var writeNewVal = true
                 list.forEach {
@@ -149,5 +142,8 @@ class SearchFragment : BaseFragment() {
                 }
             }
         }
+    }
+
+    override fun renderState(state: EmptyViewState) {
     }
 }

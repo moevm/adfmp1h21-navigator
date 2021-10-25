@@ -4,7 +4,6 @@ import android.os.Parcelable
 import kotlinx.android.parcel.Parcelize
 
 @Parcelize
-data class UserLocation(
-    val lat: Double = 0.0,
-    val lng: Double = 0.0
-) : Parcelable
+data class SearchHistoryItem(
+    val place: String = ""
+): Parcelable

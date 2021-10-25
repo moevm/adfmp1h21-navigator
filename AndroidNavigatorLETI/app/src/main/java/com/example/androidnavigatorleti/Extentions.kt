@@ -7,7 +7,7 @@ import android.os.Build
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
-import com.example.androidnavigatorleti.base.Navigation
+import com.example.androidnavigatorleti.ui.base.Navigation
 
 const val PERMISSION_REQUEST_CODE = 1001
 const val BACKGROUND_LOCATION_PERMISSION_REQUEST_CODE = 1002

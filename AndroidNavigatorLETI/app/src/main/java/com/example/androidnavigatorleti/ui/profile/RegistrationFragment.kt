@@ -1,20 +1,20 @@
 package com.example.androidnavigatorleti.ui.profile
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.Toast
 import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.viewModels
 import com.example.androidnavigatorleti.R
-import com.example.androidnavigatorleti.base.BaseFragment
-import com.example.androidnavigatorleti.data.room.tables.UserInfo
+import com.example.androidnavigatorleti.data.domain.UserInfo
+import com.example.androidnavigatorleti.ui.base.BaseFragment
+import com.example.androidnavigatorleti.ui.base.EmptyViewState
 import kotlinx.android.synthetic.main.fragment_registration.*
 import java.text.SimpleDateFormat
 import java.util.*
 
-class RegistrationFragment : BaseFragment() {
+class RegistrationFragment : BaseFragment<RegistrationViewModel, EmptyViewState>(R.layout.fragment_registration) {
 
     companion object {
 
@@ -23,7 +23,7 @@ class RegistrationFragment : BaseFragment() {
         const val BIRTHDAY_MAX_AGE = 18
     }
 
-    private val viewModel: RegistrationVIewModel by viewModels()
+    override val viewModel: RegistrationViewModel by viewModels()
 
     private var errorFlag = false
 
@@ -39,13 +39,6 @@ class RegistrationFragment : BaseFragment() {
         get() = Calendar.getInstance().apply {
             set(Calendar.YEAR, get(Calendar.YEAR) - BIRTHDAY_MAX_AGE)
         }
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? =
-        inflater.inflate(R.layout.fragment_registration, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -70,6 +63,10 @@ class RegistrationFragment : BaseFragment() {
         birthday_text.setOnClickListener {
             showRegistrationDatePicker(childFragmentManager, birthday_text)
         }
+    }
+
+    override fun renderState(state: EmptyViewState) {
+
     }
 
     private fun checkIfTextFieldEmptyAndMakeToast(view: EditText) {

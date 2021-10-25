@@ -1,19 +1,23 @@
 package com.example.androidnavigatorleti.ui.settings
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
-import android.view.LayoutInflater
+import android.provider.Settings
 import android.view.View
-import android.view.ViewGroup
+import androidx.fragment.app.viewModels
 import com.example.androidnavigatorleti.PERMISSION_REQUEST_CODE
 import com.example.androidnavigatorleti.R
-import com.example.androidnavigatorleti.base.BaseFragment
+import com.example.androidnavigatorleti.ui.base.BaseFragment
+import com.example.androidnavigatorleti.ui.base.EmptyViewState
+import com.example.androidnavigatorleti.checkLocationPermission
+import com.example.androidnavigatorleti.requestLocationPermissions
 import kotlinx.android.synthetic.main.fragment_settings.*
 import kotlinx.android.synthetic.main.settings_switch.view.*
 
-class SettingsFragment: BaseFragment() {
+class SettingsFragment: BaseFragment<SettingsViewModel, EmptyViewState>(R.layout.fragment_settings) {
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =
-        inflater.inflate(R.layout.fragment_settings, container, false)
+    override val viewModel: SettingsViewModel by viewModels()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -41,10 +45,10 @@ class SettingsFragment: BaseFragment() {
         }
 
         with(history_layout?.nav_switch!!) {
-            isChecked = prefsManager.getBoolean(SharedPreferencesManager.Keys.HISTORY_ENABLED, false)
+            isChecked = viewModel.isHistoryEnabled()
 
             setOnCheckedChangeListener { _, _ ->
-                prefsManager.putBoolean(SharedPreferencesManager.Keys.HISTORY_ENABLED, isChecked)
+                viewModel.setHistoryEnabled(isChecked)
             }
         }
     }
@@ -59,5 +63,8 @@ class SettingsFragment: BaseFragment() {
                 geo_layout?.nav_switch?.isChecked = requireContext().checkLocationPermission()
             }
         }
+    }
+
+    override fun renderState(state: EmptyViewState) {
     }
 }

@@ -1,20 +1,20 @@
 package com.example.androidnavigatorleti.data.room.dao
 
 import androidx.room.*
-import com.example.androidnavigatorleti.data.room.tables.SearchHistoryItem
+import com.example.androidnavigatorleti.data.room.tables.DatabaseSearchHistoryItem
 
 @Dao
 interface SearchHistoryDao {
 
-    @Query("SELECT * FROM SearchHistoryItem")
-    fun getSearchHistory(): List<SearchHistoryItem>
+    @Query("SELECT * FROM DatabaseSearchHistoryItem")
+    fun getSearchHistory(): List<DatabaseSearchHistoryItem>
 
     @Insert
-    fun addSearchHistoryItem(vararg item: SearchHistoryItem)
+    fun addSearchHistoryItem(vararg itemDatabase: DatabaseSearchHistoryItem)
 
     @Delete
-    fun deleteSearchHistoryItem(item: SearchHistoryItem)
+    fun deleteSearchHistoryItem(itemDatabase: DatabaseSearchHistoryItem)
 
-    @Query("SELECT id FROM SearchHistoryItem WHERE place_name = (:place_name)")
+    @Query("SELECT id FROM DatabaseSearchHistoryItem WHERE place_name = (:place_name)")
     fun getSearchHistoryItemId(place_name: String) : Int
 }

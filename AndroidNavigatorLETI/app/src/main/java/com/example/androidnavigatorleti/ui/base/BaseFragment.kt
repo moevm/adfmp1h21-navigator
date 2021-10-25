@@ -1,4 +1,4 @@
-package com.example.androidnavigatorleti.base
+package com.example.androidnavigatorleti.ui.base
 
 import android.content.Context
 import android.content.Intent
@@ -17,18 +17,21 @@ import androidx.navigation.NavDirections
 import androidx.navigation.fragment.findNavController
 import com.example.androidnavigatorleti.MainActivity
 import com.example.androidnavigatorleti.navigateTo
-import com.example.androidnavigatorleti.data.preferences.SharedPreferencesManager
 import com.instacart.library.truetime.TrueTime
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.koin.core.component.KoinComponent
 
 abstract class BaseFragment<T : BaseViewModel<S>, S : BaseViewState>(
     @LayoutRes private val layoutId: Int,
     private val disableAdjustResize: Boolean = false
-) : Fragment(layoutId) {
+) : Fragment(layoutId), KoinComponent {
 
     companion object {
+
+        const val DEFAULT_USER_LATITUDE = 30.315492
+        const val DEFAULT_USER_LONGITUDE = 59.939007
 
         private const val CLICK_LOCKING_TIME = 500L
     }

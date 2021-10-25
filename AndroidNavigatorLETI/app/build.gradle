@@ -4,6 +4,7 @@ plugins {
     id 'kotlin-android-extensions'
     id 'kotlin-kapt'
     id 'androidx.navigation.safeargs.kotlin'
+    id 'koin'
 }
 
 android {
@@ -69,7 +70,9 @@ dependencies {
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.3'
 
     // DI
-    implementation "io.insert-koin:koin-android:3.1.2"
+    def koin_version = "3.1.2"
+    implementation "io.insert-koin:koin-android:$koin_version"
+    testImplementation "io.insert-koin:koin-test:$koin_version"
 
     // TrueTime
     implementation 'com.github.instacart.truetime-android:library-extension-rx:3.4'

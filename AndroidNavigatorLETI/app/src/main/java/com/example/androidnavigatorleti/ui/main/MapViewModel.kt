@@ -4,13 +4,10 @@ import android.os.Handler
 import android.os.Looper
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.example.androidnavigatorleti.R
-import com.example.androidnavigatorleti.base.BaseFragment
-import com.example.androidnavigatorleti.base.BaseViewModel
-import com.example.androidnavigatorleti.base.BaseViewState
-import com.example.androidnavigatorleti.data.*
+import com.example.androidnavigatorleti.ui.base.BaseFragment
+import com.example.androidnavigatorleti.ui.base.BaseViewModel
+import com.example.androidnavigatorleti.ui.base.BaseViewState
 import com.example.androidnavigatorleti.data.domain.TrafficLight
 import com.example.androidnavigatorleti.data.domain.UserLocation
 import com.example.androidnavigatorleti.data.preferences.SharedPreferencesManager
@@ -24,9 +21,7 @@ import com.google.maps.android.SphericalUtil
 import com.google.maps.model.DirectionsResult
 import com.instacart.library.truetime.TrueTime
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.MutableStateFlow
 import org.koin.core.component.inject
-import org.koin.java.KoinJavaComponent.inject
 import java.io.IOException
 import kotlin.coroutines.CoroutineContext
 import kotlin.math.floor
@@ -37,10 +32,11 @@ class MapViewModel : BaseViewModel<MapViewState>(MapViewState()), CoroutineScope
 
     companion object {
 
-        private const val DEFAULT_USER_LATITUDE = 30.315492
-        private const val DEFAULT_USER_LONGITUDE = 59.939007
+        private const val MIN_SPEED = 0L
         private const val MAX_SPEED = 60L
         private const val YELLOW_SIGNAL_TIME = 3L
+        private const val LINE_WIDTH = 16f
+        private const val TO_MINUTES_COEFF = 3.6
     }
 
     override val coroutineContext: CoroutineContext
@@ -51,7 +47,6 @@ class MapViewModel : BaseViewModel<MapViewState>(MapViewState()), CoroutineScope
 
     private var locationJob: Job? = null
 
-    private val params = MapViewState()
     var isPolylineBuild = false
 
     var newLocation = UserLocation(lat = 0.0, lng = 0.0)
@@ -63,8 +58,6 @@ class MapViewModel : BaseViewModel<MapViewState>(MapViewState()), CoroutineScope
     private val polyLineMutableLiveData = MutableLiveData<PolylineOptions?>()
     val polyLineLiveData: LiveData<PolylineOptions?>
         get() = polyLineMutableLiveData
-
-    private var paramsFlow = MutableStateFlow(MapViewState())
 
     fun checkJob(job: Job?) = job == null || job.isCompleted
 
@@ -83,49 +76,32 @@ class MapViewModel : BaseViewModel<MapViewState>(MapViewState()), CoroutineScope
     }
 
     fun postFlowValues() {
-        params.let {
-            val delta = lastLocation?.let { last ->
-                SphericalUtil.computeDistanceBetween(last.toLatLng(), newLocation.toLatLng())
-            } ?: 0.0
+        val delta = lastLocation?.let { last ->
+            SphericalUtil.computeDistanceBetween(last.toLatLng(), newLocation.toLatLng())
+        } ?: 0.0
 
-            lastLocation = newLocation
+        lastLocation = newLocation
+        trafficLights.forEach { light ->
+            light.distance = SphericalUtil.computeDistanceBetween(newLocation.toLatLng(), light.location)
+        }
 
-            it.currentSpeed = (delta * 3.6).toInt()
-
-            it.currentDistance = SphericalUtil.computeDistanceBetween(newLocation.toLatLng(), polylinePoints.last())
-            trafficLights.forEach { light ->
-                light.distance = SphericalUtil.computeDistanceBetween(newLocation.toLatLng(), light.location)
+        if (isPolylineBuild) {
+            if (trafficLights.size > 0 && currentState.trafficLightDistance < trafficLights[0].distance) {
+                trafficLights.removeAt(0)
             }
 
-            if (isPolylineBuild) {
-                if (trafficLights.size > 0 && it.trafficLightDistance < trafficLights[0].distance) {
-                    trafficLights.removeAt(0)
-                }
-
-                if (trafficLights.size > 0) it.trafficLightDistance = trafficLights[0].distance
-            }
-
-            val (minimumSpeed, maximumSpeed) = computeMinAndMaxSpeed()
-
-            it.minSpeed = minimumSpeed
-            it.maxSpeed = maximumSpeed
-
-            //viewStateParamsMutableLiveData.postValue(it)
+            if (trafficLights.size > 0) currentState.trafficLightDistance = trafficLights[0].distance
         }
-    }
 
-    fun collectFlows() {
-        viewModelScope.launch {
-//            paramsFlow.collect {
-//                updateState { it.copy(
-//                    minSpeed = it.minSpeed,
-//                    maxSpeed = it.maxSpeed,
-//                    currentSpeed = it.currentSpeed,
-//                    currentDistance = it.currentDistance,
-//                    trafficLightDistance = it.trafficLightDistance
-//                ) }
-//            }
-        }
+        val (minimumSpeed, maximumSpeed) = computeMinAndMaxSpeed()
+
+        updateState { state -> state.copy(
+            minSpeed = minimumSpeed,
+            maxSpeed = maximumSpeed,
+            currentSpeed = (delta * TO_MINUTES_COEFF).toInt(),
+            currentDistance = SphericalUtil.computeDistanceBetween(newLocation.toLatLng(), polylinePoints.last()),
+            trafficLightDistance = state.trafficLightDistance
+        ) }
     }
 
     private fun makePolyline(
@@ -168,14 +144,13 @@ class MapViewModel : BaseViewModel<MapViewState>(MapViewState()), CoroutineScope
             for (item in path) {
                 val point = LatLng(item.lat, item.lng)
                 polylinePoints.add(point)
-                //Log.d("HIHI", point.toString())
                 line.add(point)
                 latLngBuilder.include(point)
             }
         }
 
         //Делаем линию более менее симпатичное
-        line.width(16f).color(R.color.colorPrimary)
+        line.width(LINE_WIDTH).color(R.color.colorPrimary)
 
         polyLineMutableLiveData.postValue(line)
 
@@ -184,10 +159,13 @@ class MapViewModel : BaseViewModel<MapViewState>(MapViewState()), CoroutineScope
         val curDistance = getRootTrafficLightDistance()
         val trafficLightDist = trafficLights[0].distance
 
-        params.currentDistance = curDistance
-        params.trafficLightDistance = trafficLightDist
-
-        //viewStateParamsMutableLiveData.postValue(params)
+        updateState { it.copy(
+            minSpeed = MIN_SPEED,
+            maxSpeed = MAX_SPEED,
+            currentSpeed = 0,
+            currentDistance = curDistance,
+            trafficLightDistance = trafficLightDist
+        ) }
 
         val mainHandler = Handler(Looper.getMainLooper())
 
@@ -320,19 +298,19 @@ class MapViewModel : BaseViewModel<MapViewState>(MapViewState()), CoroutineScope
     }
 
     private fun computeMinAndMaxSpeed(): Pair<Long, Long> {
-        var redSpeed = 0L
-        var greenSpeed = 60L
+        var redSpeed = MIN_SPEED
+        var greenSpeed = MAX_SPEED
 
         trafficLights.getOrNull(0)?.apply {
             val currentOffset = TrueTime.now().time % interval
             val greenOffset = (startGreenOffset - currentOffset + interval) % interval
             val redOffset = (startRedOffset - currentOffset - YELLOW_SIGNAL_TIME + interval) % interval
 
-            redSpeed = floor(distance / redOffset * 3.6).toLong()
-            greenSpeed = floor(distance / greenOffset * 3.6).toLong()
+            redSpeed = floor(distance / redOffset * TO_MINUTES_COEFF).toLong()
+            greenSpeed = floor(distance / greenOffset * TO_MINUTES_COEFF).toLong()
 
             if (redSpeed > MAX_SPEED) {
-                redSpeed = floor(distance / (redOffset + interval) * 3.6).toLong()
+                redSpeed = floor(distance / (redOffset + interval) * TO_MINUTES_COEFF).toLong()
             }
 
             greenSpeed = min(greenSpeed, MAX_SPEED)

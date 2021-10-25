@@ -10,9 +10,10 @@ import androidx.room.Room
 import com.example.androidnavigatorleti.data.room.UserDatabase
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.android.synthetic.main.activity_main.*
+import org.koin.core.component.KoinComponent
 
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), KoinComponent {
 
     lateinit var db: UserDatabase
 

@@ -4,29 +4,29 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.androidnavigatorleti.R
-import com.example.androidnavigatorleti.data.room.tables.SearchHistoryItem
+import com.example.androidnavigatorleti.data.domain.SearchHistoryItem
 import com.example.androidnavigatorleti.ui.viewholders.HistoryViewHolder
 
 /** Адаптер для recycler из фрагмента viewPager-а с новостями, акциями, фильмами каро и т.п. на главном экране */
 class HistoryRecyclerAdapter(private val nextClick: (position: Int) -> Unit, private val deleteClick: (position: Int) -> Unit) :
     RecyclerView.Adapter<HistoryViewHolder>() {
 
-    private val items: MutableList<SearchHistoryItem> = mutableListOf()
+    private val itemDatabases: MutableList<SearchHistoryItem> = mutableListOf()
 
-    override fun getItemCount(): Int = items.size
+    override fun getItemCount(): Int = itemDatabases.size
 
     fun setTitleData(newList: List<SearchHistoryItem>) {
-        items.clear()
+        itemDatabases.clear()
 
         if (newList.isNotEmpty()) {
-            items.addAll(newList)
+            itemDatabases.addAll(newList)
         }
 
         notifyDataSetChanged()
     }
 
     override fun onBindViewHolder(holder: HistoryViewHolder, position: Int) {
-        holder.bind(items.getOrNull(position)?.place, position, nextClick, deleteClick)
+        holder.bind(itemDatabases.getOrNull(position)?.place, position, nextClick, deleteClick)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HistoryViewHolder =
@@ -36,10 +36,10 @@ class HistoryRecyclerAdapter(private val nextClick: (position: Int) -> Unit, pri
                     false
             ))
 
-    fun getItemTitle(position: Int) = items.getOrNull(position)?.place
+    fun getItemTitle(position: Int) = itemDatabases.getOrNull(position)?.place
 
     fun deleteItemFromList(position: Int) {
-        items.removeAt(position)
+        itemDatabases.removeAt(position)
         notifyDataSetChanged()
     }
 }

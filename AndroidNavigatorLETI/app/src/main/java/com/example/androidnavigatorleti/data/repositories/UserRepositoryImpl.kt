@@ -3,8 +3,10 @@ package com.example.androidnavigatorleti.data.repositories
 import android.content.Context
 import com.example.androidnavigatorleti.data.datasources.LocalDataSource
 import com.example.androidnavigatorleti.data.datasources.RemoteDataSource
-import com.example.androidnavigatorleti.data.room.tables.SearchHistoryItem
-import com.example.androidnavigatorleti.data.room.tables.UserInfo
+import com.example.androidnavigatorleti.data.domain.SearchHistoryItem
+import com.example.androidnavigatorleti.data.domain.UserInfo
+import com.example.androidnavigatorleti.data.room.tables.DatabaseSearchHistoryItem
+import com.example.androidnavigatorleti.data.room.tables.DatabaseUserInfo
 
 class UserRepositoryImpl(
     private val context: Context,
@@ -12,19 +14,19 @@ class UserRepositoryImpl(
     private val remoteDataSource: RemoteDataSource
 ) : UserRepository {
 
-    override fun getUserOrNull(): UserInfo? = localDataSource.getUserOrNull()
+    override fun getUserOrNull(): UserInfo? = localDataSource.getUserOrNull()?.mapToDomain()
 
-    override fun getSearchHistory(): List<SearchHistoryItem> = localDataSource.getSearchHistory()
+    override fun getSearchHistory(): List<SearchHistoryItem> = localDataSource.getSearchHistory().map { it.mapToDomain() }
 
     override fun insertUser(info: UserInfo) {
-        localDataSource.insertUser(info)
+        localDataSource.insertUser(DatabaseUserInfo(info))
     }
 
-    override fun deleteHistoryItem(item: SearchHistoryItem) {
-        localDataSource.deleteHistoryItem(item)
+    override fun deleteHistoryItem(itemDatabase: SearchHistoryItem) {
+        localDataSource.deleteHistoryItem(DatabaseSearchHistoryItem(itemDatabase))
     }
 
-    override fun addSearchHistoryItem(item: SearchHistoryItem) {
-        localDataSource.addSearchHistoryItem(item)
+    override fun addSearchHistoryItem(itemDatabase: SearchHistoryItem) {
+        localDataSource.addSearchHistoryItem(DatabaseSearchHistoryItem(itemDatabase))
     }
 }

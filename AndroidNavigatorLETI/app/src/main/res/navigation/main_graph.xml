@@ -29,13 +29,13 @@
         <argument
             android:name="firstMarker"
             android:defaultValue="@null"
-            app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
+            app:argType="com.example.androidnavigatorleti.data.domain.UserLocation"
             app:nullable="true" />
 
         <argument
             android:name="secondMarker"
             android:defaultValue="@null"
-            app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
+            app:argType="com.example.androidnavigatorleti.data.domain.UserLocation"
             app:nullable="true" />
 
         <argument
@@ -51,7 +51,7 @@
             <argument
                 android:name="firstMarker"
                 android:defaultValue="@null"
-                app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
+                app:argType="com.example.androidnavigatorleti.data.domain.UserLocation"
                 app:nullable="true" />
 
         </action>
@@ -64,13 +64,13 @@
             <argument
                 android:name="firstMarker"
                 android:defaultValue="@null"
-                app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
+                app:argType="com.example.androidnavigatorleti.data.domain.UserLocation"
                 app:nullable="true" />
 
             <argument
                 android:name="secondMarker"
                 android:defaultValue="@null"
-                app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
+                app:argType="com.example.androidnavigatorleti.data.domain.UserLocation"
                 app:nullable="true" />
 
         </action>
@@ -83,7 +83,7 @@
             <argument
                 android:name="point"
                 android:defaultValue="@null"
-                app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
+                app:argType="com.example.androidnavigatorleti.data.domain.UserLocation"
                 app:nullable="true" />
 
         </action>
@@ -104,19 +104,19 @@
         <argument
             android:name="point"
             android:defaultValue="@null"
-            app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
+            app:argType="com.example.androidnavigatorleti.data.domain.UserLocation"
             app:nullable="true" />
 
         <argument
             android:name="firstMarker"
             android:defaultValue="@null"
-            app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
+            app:argType="com.example.androidnavigatorleti.data.domain.UserLocation"
             app:nullable="true" />
 
         <argument
             android:name="secondMarker"
             android:defaultValue="@null"
-            app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
+            app:argType="com.example.androidnavigatorleti.data.domain.UserLocation"
             app:nullable="true" />
 
         <action
@@ -148,7 +148,7 @@
             <argument
                 android:name="secondMarker"
                 android:defaultValue="@null"
-                app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
+                app:argType="com.example.androidnavigatorleti.data.domain.UserLocation"
                 app:nullable="true" />
         </action>
 
@@ -165,7 +165,7 @@
             <argument
                 android:name="secondMarker"
                 android:defaultValue="@null"
-                app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
+                app:argType="com.example.androidnavigatorleti.data.domain.UserLocation"
                 app:nullable="true" />
         </action>
 
@@ -182,13 +182,13 @@
             <argument
                 android:name="firstMarker"
                 android:defaultValue="@null"
-                app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
+                app:argType="com.example.androidnavigatorleti.data.domain.UserLocation"
                 app:nullable="true" />
 
             <argument
                 android:name="secondMarker"
                 android:defaultValue="@null"
-                app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
+                app:argType="com.example.androidnavigatorleti.data.domain.UserLocation"
                 app:nullable="true" />
         </action>
 

@@ -8,22 +8,16 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
-import android.util.Log
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.navArgs
 import com.example.androidnavigatorleti.PERMISSION_REQUEST_CODE
 import com.example.androidnavigatorleti.R
-import com.example.androidnavigatorleti.base.BaseFragment
+import com.example.androidnavigatorleti.ui.base.BaseFragment
 import com.example.androidnavigatorleti.checkLocationPermission
 import com.example.androidnavigatorleti.data.domain.UserLocation
-import com.example.androidnavigatorleti.data.preferences.SharedPreferencesManager
-import com.example.androidnavigatorleti.data.preferences.SharedPreferencesManager.Keys.LAT_KEY
-import com.example.androidnavigatorleti.data.preferences.SharedPreferencesManager.Keys.LNG_KEY
 import com.example.androidnavigatorleti.requestLocationPermissions
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -31,10 +25,8 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.*
 import com.google.maps.GeoApiContext
 import com.google.maps.android.SphericalUtil
-import kotlinx.android.synthetic.main.distance_container.*
 import kotlinx.android.synthetic.main.distance_container.view.*
 import kotlinx.android.synthetic.main.fragment_map.*
-import kotlinx.android.synthetic.main.search_item.*
 import kotlinx.android.synthetic.main.speed_container.view.*
 import kotlinx.coroutines.Runnable
 import java.util.*
@@ -46,6 +38,14 @@ class MapFragment : BaseFragment<MapViewModel, MapViewState>(R.layout.fragment_m
 
         private const val DEFAULT_ZOOM = 12f
         private const val ZOOM_SPEED = 400
+        private const val SCHEME = "package"
+        private const val METERS_TOP_VALUE = 1000.0
+        private const val SCREEN_PADDING = 0.1
+        private const val SHOW_MARKER_DELAY = 500L
+        private const val LOCATION_UPDATE_INTERVAL = 1000L
+        private const val SMALLEST_DISPLACEMENT_RADIUS = 5f
+        private const val HOUR_INTERVAL = 60
+        private const val TIME_FROM_DISTANCE_COEFFICIENT = 0.0025
     }
 
     override val viewModel: MapViewModel by viewModels()
@@ -75,77 +75,13 @@ class MapFragment : BaseFragment<MapViewModel, MapViewState>(R.layout.fragment_m
 
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? =
-        inflater.inflate(R.layout.fragment_map, container, false)
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         map_view.onCreate(savedInstanceState)
+
         showMap()
-
-        if (permissionGranted) startLocationUpdates()
-
-        if (args.makeRoot) makeRoot()
-
-
-        if (args.setFirstMarker) {
-            root_button_page.visibility = View.VISIBLE
-            my_location_floating_button.visibility = View.GONE
-            my_location_button.setOnClickListener {
-                firstMarker?.remove()
-                showMarkerOnMap()
-            }
-            choose_button.setOnClickListener {
-                val markerLocation: LatLng? = firstMarker?.position
-
-                if (markerLocation != null) {
-                    val direction = MapFragmentDirections.actionFirstMarkerSet(
-                        UserLocation(
-                            markerLocation.latitude,
-                            markerLocation.longitude
-                        )
-                    )
-                    openFragment(direction)
-                }
-            }
-        }
-
-        if (args.setSecondMarker) {
-            root_button_page.visibility = View.VISIBLE
-            my_location_floating_button.visibility = View.GONE
-            my_location_button.setOnClickListener {
-                secondMarker?.remove()
-                showMarkerOnMap()
-            }
-            choose_button.setOnClickListener {
-                val firstMarkerLocation: LatLng? = firstMarker?.position
-                val secondMarkerLocation: LatLng? = secondMarker?.position
-
-                val firstParcelUserLoc = firstMarkerLocation?.let {
-                    UserLocation(it.latitude, it.longitude)
-                }
-                val secondParcelUserLoc = secondMarkerLocation?.let {
-                    UserLocation(it.latitude, it.longitude)
-                }
-                val direction = if (args.setFirstMarkerWithSecond) {
-                    MapFragmentDirections.actionAllMarkersSet(
-                        secondParcelUserLoc,
-                        firstParcelUserLoc
-                    )
-                } else {
-                    MapFragmentDirections.actionAllMarkersSet(
-                        firstParcelUserLoc,
-                        secondParcelUserLoc
-                    )
-                }
-                openFragment(direction)
-            }
-        }
+        initViews()
     }
 
     override fun onStart() {
@@ -208,7 +144,7 @@ class MapFragment : BaseFragment<MapViewModel, MapViewState>(R.layout.fragment_m
                         Toast.LENGTH_LONG
                     ).show()
                     startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                        data = Uri.fromParts("package", requireContext().packageName, null)
+                        data = Uri.fromParts(SCHEME, requireContext().packageName, null)
                         addCategory(Intent.CATEGORY_DEFAULT)
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
@@ -226,8 +162,68 @@ class MapFragment : BaseFragment<MapViewModel, MapViewState>(R.layout.fragment_m
         }
     }
 
+    private fun initViews() {
+        if (permissionGranted) startLocationUpdates()
+
+        if (args.makeRoot) makeRoot()
+
+        if (args.setFirstMarker) {
+            root_button_page.visibility = View.VISIBLE
+            my_location_floating_button.visibility = View.GONE
+            my_location_button.setOnClickListener {
+                firstMarker?.remove()
+                showMarkerOnMap()
+            }
+            choose_button.setOnClickListener {
+                val markerLocation: LatLng? = firstMarker?.position
+
+                if (markerLocation != null) {
+                    val direction = MapFragmentDirections.actionFirstMarkerSet(
+                        UserLocation(
+                            markerLocation.latitude,
+                            markerLocation.longitude
+                        )
+                    )
+                    openFragment(direction)
+                }
+            }
+        }
+
+        if (args.setSecondMarker) {
+            root_button_page.visibility = View.VISIBLE
+            my_location_floating_button.visibility = View.GONE
+            my_location_button.setOnClickListener {
+                secondMarker?.remove()
+                showMarkerOnMap()
+            }
+            choose_button.setOnClickListener {
+                val firstMarkerLocation: LatLng? = firstMarker?.position
+                val secondMarkerLocation: LatLng? = secondMarker?.position
+
+                val firstParcelUserLoc = firstMarkerLocation?.let {
+                    UserLocation(it.latitude, it.longitude)
+                }
+                val secondParcelUserLoc = secondMarkerLocation?.let {
+                    UserLocation(it.latitude, it.longitude)
+                }
+                val direction = if (args.setFirstMarkerWithSecond) {
+                    MapFragmentDirections.actionAllMarkersSet(
+                        secondParcelUserLoc,
+                        firstParcelUserLoc
+                    )
+                } else {
+                    MapFragmentDirections.actionAllMarkersSet(
+                        firstParcelUserLoc,
+                        secondParcelUserLoc
+                    )
+                }
+                openFragment(direction)
+            }
+        }
+    }
+
     private fun formatDistance(distance: Double): String {
-        return if (distance > 1000.0) {
+        return if (distance > METERS_TOP_VALUE) {
             getString(R.string.kilometers, String.format("%.1f", distance / 1000.0))
         } else {
             getString(R.string.meters, String.format("%.0f", distance))
@@ -251,9 +247,6 @@ class MapFragment : BaseFragment<MapViewModel, MapViewState>(R.layout.fragment_m
                 showDoubleBlockedMarkers()
                 showMarkerLocation()
             }
-//            polylinePoints.forEach {
-//                map?.addMarker(MarkerOptions().position(LatLng(it.latitude, it.longitude)).draggable(false))
-//            }
         })
 
         close_floating_button.setOnClickListener {
@@ -265,8 +258,6 @@ class MapFragment : BaseFragment<MapViewModel, MapViewState>(R.layout.fragment_m
             removeMarkers()
             polyLine?.remove()
         }
-
-        viewModel.collectFlows()
     }
 
     private fun countDistance(
@@ -278,11 +269,11 @@ class MapFragment : BaseFragment<MapViewModel, MapViewState>(R.layout.fragment_m
             LatLng(endPoint.lat, endPoint.lng)
         )
 
-        val time = floor(distance / 1000 * 2.5).toInt()
+        val time = floor(distance * TIME_FROM_DISTANCE_COEFFICIENT).toInt()
 
-        return if (time >= 60) {
-            val hours = time / 60
-            val minutes = time % 60
+        return if (time >= HOUR_INTERVAL) {
+            val hours = time / HOUR_INTERVAL
+            val minutes = time % HOUR_INTERVAL
             getString(R.string.route_time_text_hours, hours.toString(), minutes.toString())
         } else {
             getString(R.string.route_time_text_min, time.toString())
@@ -292,9 +283,9 @@ class MapFragment : BaseFragment<MapViewModel, MapViewState>(R.layout.fragment_m
     private fun buildLocationRequest() {
         locationRequest = LocationRequest()
         locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-        locationRequest.interval = 1000
-        locationRequest.fastestInterval = 1000
-        locationRequest.smallestDisplacement = 5f
+        locationRequest.interval = LOCATION_UPDATE_INTERVAL
+        locationRequest.fastestInterval = LOCATION_UPDATE_INTERVAL
+        locationRequest.smallestDisplacement = SMALLEST_DISPLACEMENT_RADIUS
     }
 
     private fun startLocationUpdates() {
@@ -338,7 +329,7 @@ class MapFragment : BaseFragment<MapViewModel, MapViewState>(R.layout.fragment_m
                 //Show user location with delay
                 Handler(Looper.getMainLooper()).postDelayed(Runnable {
                     showMarkerOnMap()
-                }, 500)
+                }, SHOW_MARKER_DELAY)
 
                 uiSettings.isMyLocationButtonEnabled = false
                 uiSettings.isMapToolbarEnabled = false
@@ -474,7 +465,8 @@ class MapFragment : BaseFragment<MapViewModel, MapViewState>(R.layout.fragment_m
 
         val width = resources.displayMetrics.widthPixels
         val height = resources.displayMetrics.heightPixels
-        val padding = (width * 0.10).toInt() // offset from edges of the map 10% of screen
+        // offset from edges of the map 10% of screen
+        val padding = (width * SCREEN_PADDING).toInt()
 
         map?.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, width, height, padding))
     }

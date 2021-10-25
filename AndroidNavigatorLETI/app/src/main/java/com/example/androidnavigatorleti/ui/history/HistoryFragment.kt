@@ -1,16 +1,17 @@
 package com.example.androidnavigatorleti.ui.history
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import com.example.androidnavigatorleti.R
-import com.example.androidnavigatorleti.base.BaseFragment
+import com.example.androidnavigatorleti.ui.base.BaseFragment
+import com.example.androidnavigatorleti.ui.base.EmptyViewState
 import com.example.androidnavigatorleti.ui.adapters.HistoryRecyclerAdapter
 import kotlinx.android.synthetic.main.fragment_history.*
 
-class HistoryFragment : BaseFragment() {
+class HistoryFragment : BaseFragment<HistoryViewModel, EmptyViewState>(R.layout.fragment_history) {
+
+    override val viewModel: HistoryViewModel by viewModels()
 
     private val historyRecyclerAdapter by lazy {
         HistoryRecyclerAdapter(
@@ -18,15 +19,6 @@ class HistoryFragment : BaseFragment() {
             deleteClick = ::onDeleteClick
         )
     }
-
-    private val viewModel: HistoryViewModel by viewModels()
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? =
-        inflater.inflate(R.layout.fragment_history, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -54,6 +46,9 @@ class HistoryFragment : BaseFragment() {
                 }
             }
         }
+    }
+
+    override fun renderState(state: EmptyViewState) {
     }
 
     private fun onNextClick(position: Int) {

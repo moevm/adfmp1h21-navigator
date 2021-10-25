@@ -1,18 +1,15 @@
 package com.example.androidnavigatorleti.ui.about
 
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import com.example.androidnavigatorleti.R
-import com.example.androidnavigatorleti.base.BaseFragment
+import androidx.fragment.app.viewModels
+import com.example.androidnavigatorleti.ui.base.BaseFragment
+import com.example.androidnavigatorleti.ui.base.EmptyViewModel
+import com.example.androidnavigatorleti.ui.base.EmptyViewState
 
-class AboutFragment : BaseFragment() {
+class AboutFragment : BaseFragment<EmptyViewModel, EmptyViewState>(R.layout.fragment_about) {
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? =
-        inflater.inflate(R.layout.fragment_about, container, false)
+    override val viewModel: EmptyViewModel by viewModels()
+
+    override fun renderState(state: EmptyViewState) {
+    }
 }

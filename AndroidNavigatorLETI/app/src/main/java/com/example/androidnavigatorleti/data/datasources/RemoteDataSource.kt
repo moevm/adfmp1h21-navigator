@@ -6,6 +6,4 @@ import com.example.androidnavigatorleti.data.preferences.SharedPreferencesManage
 class RemoteDataSource(
     private val context: Context,
     private val sharedPreferenceManager: SharedPreferencesManager
-) {
-
-}
+)

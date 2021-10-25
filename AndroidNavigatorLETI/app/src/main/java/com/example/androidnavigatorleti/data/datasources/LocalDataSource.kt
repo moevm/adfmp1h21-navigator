@@ -3,8 +3,8 @@ package com.example.androidnavigatorleti.data.datasources
 import android.content.Context
 import com.example.androidnavigatorleti.data.room.UserDatabase
 import com.example.androidnavigatorleti.data.preferences.SharedPreferencesManager
-import com.example.androidnavigatorleti.data.room.tables.SearchHistoryItem
-import com.example.androidnavigatorleti.data.room.tables.UserInfo
+import com.example.androidnavigatorleti.data.room.tables.DatabaseSearchHistoryItem
+import com.example.androidnavigatorleti.data.room.tables.DatabaseUserInfo
 
 class LocalDataSource(
     private val context: Context,
@@ -12,19 +12,19 @@ class LocalDataSource(
     private val roomStorage: UserDatabase
 ) {
 
-    fun getUserOrNull(): UserInfo? = roomStorage.userDao().getUser()
+    fun getUserOrNull(): DatabaseUserInfo? = roomStorage.userDao().getUser()
 
-    fun getSearchHistory(): List<SearchHistoryItem> = roomStorage.searchHistoryDao().getSearchHistory()
+    fun getSearchHistory(): List<DatabaseSearchHistoryItem> = roomStorage.searchHistoryDao().getSearchHistory()
 
-    fun insertUser(info: UserInfo) {
+    fun insertUser(info: DatabaseUserInfo) {
         roomStorage.userDao().insertUser(info)
     }
 
-    fun deleteHistoryItem(item: SearchHistoryItem) {
-        roomStorage.searchHistoryDao().deleteSearchHistoryItem(item)
+    fun deleteHistoryItem(itemDatabase: DatabaseSearchHistoryItem) {
+        roomStorage.searchHistoryDao().deleteSearchHistoryItem(itemDatabase)
     }
 
-    fun addSearchHistoryItem(item: SearchHistoryItem) {
-        roomStorage.searchHistoryDao().addSearchHistoryItem(item)
+    fun addSearchHistoryItem(itemDatabase: DatabaseSearchHistoryItem) {
+        roomStorage.searchHistoryDao().addSearchHistoryItem(itemDatabase)
     }
 }

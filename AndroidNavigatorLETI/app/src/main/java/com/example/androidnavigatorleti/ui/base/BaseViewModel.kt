@@ -1,4 +1,4 @@
-package com.example.androidnavigatorleti.base
+package com.example.androidnavigatorleti.ui.base
 
 import androidx.annotation.IdRes
 import androidx.annotation.UiThread
@@ -6,8 +6,9 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.navigation.NavDirections
+import org.koin.core.component.KoinComponent
 
-abstract class BaseViewModel<T : BaseViewState>(private val initialState: T) : ViewModel() {
+abstract class BaseViewModel<T : BaseViewState>(private val initialState: T) : ViewModel(), KoinComponent {
 
     protected val stateMutableLiveData: MutableLiveData<T> = MutableLiveData<T>().apply {
         value = initialState

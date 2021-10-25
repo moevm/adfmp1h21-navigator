@@ -4,18 +4,18 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.example.androidnavigatorleti.data.room.tables.SearchHistoryItem
+import com.example.androidnavigatorleti.data.room.tables.DatabaseSearchHistoryItem
 import com.example.androidnavigatorleti.data.room.dao.UserDao
-import com.example.androidnavigatorleti.data.room.tables.UserInfo
-import com.example.androidnavigatorleti.data.domain.UserLocation
 import com.example.androidnavigatorleti.data.room.UserDatabase.Companion.DB_VERSION
 import com.example.androidnavigatorleti.data.room.dao.SearchHistoryDao
+import com.example.androidnavigatorleti.data.room.tables.DatabaseUserInfo
+import com.example.androidnavigatorleti.data.room.tables.DatabaseUserLocation
 
 @Database(
     entities = [
-        UserInfo::class,
-        UserLocation::class,
-        SearchHistoryItem::class
+        DatabaseUserInfo::class,
+        DatabaseUserLocation::class,
+        DatabaseSearchHistoryItem::class
                ],
     version = DB_VERSION
 )

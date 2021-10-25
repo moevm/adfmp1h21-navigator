@@ -1,8 +1,8 @@
 package com.example.androidnavigatorleti.uc
 
+import com.example.androidnavigatorleti.data.domain.SearchHistoryItem
+import com.example.androidnavigatorleti.data.domain.UserInfo
 import com.example.androidnavigatorleti.data.repositories.UserRepository
-import com.example.androidnavigatorleti.data.room.tables.SearchHistoryItem
-import com.example.androidnavigatorleti.data.room.tables.UserInfo
 
 class UserUc(private val userRepository: UserRepository) {
 
@@ -14,11 +14,11 @@ class UserUc(private val userRepository: UserRepository) {
         userRepository.insertUser(info)
     }
 
-    fun deleteUser(item: SearchHistoryItem) {
-        userRepository.deleteHistoryItem(item)
+    fun deleteUser(itemDatabase: SearchHistoryItem) {
+        userRepository.deleteHistoryItem(itemDatabase)
     }
 
-    fun addSearchHistoryItem(item: SearchHistoryItem) {
-        userRepository.addSearchHistoryItem(item)
+    fun addSearchHistoryItem(itemDatabase: SearchHistoryItem) {
+        userRepository.addSearchHistoryItem(itemDatabase)
     }
 }

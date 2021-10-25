@@ -1,21 +1,17 @@
 package com.example.androidnavigatorleti.ui.profile
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
+import androidx.fragment.app.viewModels
 import com.example.androidnavigatorleti.R
-import com.example.androidnavigatorleti.base.BaseFragment
+import com.example.androidnavigatorleti.ui.base.BaseFragment
+import com.example.androidnavigatorleti.ui.base.EmptyViewModel
+import com.example.androidnavigatorleti.ui.base.EmptyViewState
 import kotlinx.android.synthetic.main.fragment_unregistered.*
 
-class UserUnregisteredFragment : BaseFragment() {
+class UserUnregisteredFragment : BaseFragment<EmptyViewModel, EmptyViewState>(R.layout.fragment_unregistered) {
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? =
-        inflater.inflate(R.layout.fragment_unregistered, container, false)
+    override val viewModel: EmptyViewModel by viewModels()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -23,5 +19,8 @@ class UserUnregisteredFragment : BaseFragment() {
         register_button.setOnClickListener {
             openFragment(R.id.registration)
         }
+    }
+
+    override fun renderState(state: EmptyViewState) {
     }
 }

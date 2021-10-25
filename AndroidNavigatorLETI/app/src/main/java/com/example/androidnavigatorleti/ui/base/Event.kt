@@ -1,4 +1,4 @@
-package com.example.androidnavigatorleti.base
+package com.example.androidnavigatorleti.ui.base
 
 import androidx.lifecycle.Observer
 
