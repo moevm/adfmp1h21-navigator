@@ -7,7 +7,13 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.androidnavigatorleti.R
+import com.example.androidnavigatorleti.base.BaseFragment
+import com.example.androidnavigatorleti.base.BaseViewModel
+import com.example.androidnavigatorleti.base.BaseViewState
 import com.example.androidnavigatorleti.data.*
+import com.example.androidnavigatorleti.data.domain.TrafficLight
+import com.example.androidnavigatorleti.data.domain.UserLocation
+import com.example.androidnavigatorleti.data.preferences.SharedPreferencesManager
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
@@ -19,29 +25,33 @@ import com.google.maps.model.DirectionsResult
 import com.instacart.library.truetime.TrueTime
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collect
+import org.koin.core.component.inject
+import org.koin.java.KoinJavaComponent.inject
 import java.io.IOException
 import kotlin.coroutines.CoroutineContext
 import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
 
-class MapViewModel : ViewModel(), CoroutineScope {
+class MapViewModel : BaseViewModel<MapViewState>(MapViewState()), CoroutineScope {
 
     companion object {
 
-        const val MAX_SPEED = 60L
-        const val YELLOW_SIGNAL_TIME = 3L
+        private const val DEFAULT_USER_LATITUDE = 30.315492
+        private const val DEFAULT_USER_LONGITUDE = 59.939007
+        private const val MAX_SPEED = 60L
+        private const val YELLOW_SIGNAL_TIME = 3L
     }
 
     override val coroutineContext: CoroutineContext
         get() = job + Dispatchers.Main
 
     private val job = SupervisorJob()
+    private val preferenceManager by inject<SharedPreferencesManager>()
 
     private var locationJob: Job? = null
 
-    private val params = ViewStateParams()
+    private val params = MapViewState()
     var isPolylineBuild = false
 
     var newLocation = UserLocation(lat = 0.0, lng = 0.0)
@@ -54,18 +64,14 @@ class MapViewModel : ViewModel(), CoroutineScope {
     val polyLineLiveData: LiveData<PolylineOptions?>
         get() = polyLineMutableLiveData
 
-    private val viewStateParamsMutableLiveData = MutableLiveData<ViewStateParams>()
-    val viewStateParamsLiveData: LiveData<ViewStateParams>
-        get() = viewStateParamsMutableLiveData
-
-    private var paramsFlow = MutableStateFlow(ViewStateParams())
+    private var paramsFlow = MutableStateFlow(MapViewState())
 
     fun checkJob(job: Job?) = job == null || job.isCompleted
 
     fun buildRoute(
-            geoApiContext: GeoApiContext,
-            firstMarker: ParcelUserLocation?,
-            secondMarker: ParcelUserLocation?
+        geoApiContext: GeoApiContext,
+        firstMarker: UserLocation?,
+        secondMarker: UserLocation?
     ) {
         if (checkJob(locationJob)) {
             locationJob = launch(this.coroutineContext) {
@@ -104,23 +110,28 @@ class MapViewModel : ViewModel(), CoroutineScope {
             it.minSpeed = minimumSpeed
             it.maxSpeed = maximumSpeed
 
-            viewStateParamsMutableLiveData.postValue(it)
+            //viewStateParamsMutableLiveData.postValue(it)
         }
     }
 
     fun collectFlows() {
         viewModelScope.launch {
-            paramsFlow.collect {
-                //Log.d("HIHI", it.toString())
-                viewStateParamsMutableLiveData.postValue(it)
-            }
+//            paramsFlow.collect {
+//                updateState { it.copy(
+//                    minSpeed = it.minSpeed,
+//                    maxSpeed = it.maxSpeed,
+//                    currentSpeed = it.currentSpeed,
+//                    currentDistance = it.currentDistance,
+//                    trafficLightDistance = it.trafficLightDistance
+//                ) }
+//            }
         }
     }
 
     private fun makePolyline(
-            geoApiContext: GeoApiContext,
-            firstMarker: ParcelUserLocation?,
-            secondMarker: ParcelUserLocation?
+        geoApiContext: GeoApiContext,
+        firstMarker: UserLocation?,
+        secondMarker: UserLocation?
     ) {
         isPolylineBuild = true
 
@@ -176,7 +187,7 @@ class MapViewModel : ViewModel(), CoroutineScope {
         params.currentDistance = curDistance
         params.trafficLightDistance = trafficLightDist
 
-        viewStateParamsMutableLiveData.postValue(params)
+        //viewStateParamsMutableLiveData.postValue(params)
 
         val mainHandler = Handler(Looper.getMainLooper())
 
@@ -271,6 +282,23 @@ class MapViewModel : ViewModel(), CoroutineScope {
 //        )
     }
 
+    fun saveUserLocation(location: UserLocation) {
+        setLocation(location)
+        preferenceManager.putDouble(SharedPreferencesManager.Keys.LAT_KEY, location.lat)
+        preferenceManager.putDouble(SharedPreferencesManager.Keys.LNG_KEY, location.lng)
+    }
+
+    fun setLocation(location: UserLocation) {
+        preferenceManager.putDouble(SharedPreferencesManager.Keys.LAT_KEY, location.lat)
+        preferenceManager.putDouble(SharedPreferencesManager.Keys.LNG_KEY, location.lng)
+    }
+
+    fun getLocation(): UserLocation {
+        val lat = preferenceManager.getDouble(SharedPreferencesManager.Keys.LAT_KEY, BaseFragment.DEFAULT_USER_LATITUDE)
+        val lng = preferenceManager.getDouble(SharedPreferencesManager.Keys.LNG_KEY, BaseFragment.DEFAULT_USER_LONGITUDE)
+        return UserLocation(lat = lat, lng = lng)
+    }
+
     private fun getRootTrafficLightDistance(): Double {
         var lastPoint = polylinePoints.getOrNull(0) ?: return 0.0
         var sum = 0.0
@@ -313,4 +341,14 @@ class MapViewModel : ViewModel(), CoroutineScope {
 
         return min(greenSpeed, redSpeed) to max(greenSpeed, redSpeed)
     }
+
+    private fun UserLocation.toLatLng(): LatLng = LatLng(this.lat, this.lng)
 }
+
+data class MapViewState(
+    var minSpeed: Long = 0,
+    var maxSpeed: Long = 0,
+    var currentSpeed: Int = 0,
+    var currentDistance: Double = 0.0,
+    var trafficLightDistance: Double = 0.0
+): BaseViewState

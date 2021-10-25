@@ -1,4 +1,4 @@
-package com.example.androidnavigatorleti.preferences
+package com.example.androidnavigatorleti.data.preferences
 
 import android.content.Context
 import android.content.SharedPreferences

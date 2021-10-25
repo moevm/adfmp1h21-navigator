@@ -6,13 +6,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.fragment.app.viewModels
-import androidx.navigation.fragment.navArgs
 import com.example.androidnavigatorleti.R
 import com.example.androidnavigatorleti.base.BaseFragment
-import com.example.androidnavigatorleti.data.ParcelUserLocation
-import com.example.androidnavigatorleti.data.SearchHistoryItem
-import com.example.androidnavigatorleti.preferences.SharedPreferencesManager.Keys.HISTORY_ENABLED
+import com.example.androidnavigatorleti.data.domain.UserLocation
+import com.example.androidnavigatorleti.data.room.tables.SearchHistoryItem
+import com.example.androidnavigatorleti.data.preferences.SharedPreferencesManager.Keys.HISTORY_ENABLED
 import kotlinx.android.synthetic.main.fragment_search.*
 
 class SearchFragment : BaseFragment() {
@@ -80,7 +78,7 @@ class SearchFragment : BaseFragment() {
                             SearchFragmentDirections.actionSetFirstMarkerWithSecondMarker(
                                 setFirstMarkerWithSecond = true,
                                 setSecondMarker = true,
-                                secondMarker = ParcelUserLocation(it.latitude, it.longitude)
+                                secondMarker = UserLocation(it.latitude, it.longitude)
                             )
                         )
                     } ?: Toast.makeText(
@@ -97,7 +95,7 @@ class SearchFragment : BaseFragment() {
                     openFragment(
                         SearchFragmentDirections.actionSetSecondMarker(
                             true,
-                            ParcelUserLocation(it.latitude, it.longitude)
+                            UserLocation(it.latitude, it.longitude)
                         )
                     )
                 } ?: Toast.makeText(
@@ -138,8 +136,8 @@ class SearchFragment : BaseFragment() {
                 if (firstLoc != null && secondLoc != null) {
                     val direction = SearchFragmentDirections.actionMakeRoot(
                         true,
-                        ParcelUserLocation(firstLoc.latitude, firstLoc.longitude),
-                        ParcelUserLocation(secondLoc.latitude, secondLoc.longitude)
+                        UserLocation(firstLoc.latitude, firstLoc.longitude),
+                        UserLocation(secondLoc.latitude, secondLoc.longitude)
                     )
                     openFragment(direction)
                 } else {

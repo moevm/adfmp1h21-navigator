@@ -4,7 +4,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.androidnavigatorleti.R
-import com.example.androidnavigatorleti.data.SearchHistoryItem
+import com.example.androidnavigatorleti.data.room.tables.SearchHistoryItem
 import com.example.androidnavigatorleti.ui.viewholders.HistoryViewHolder
 
 /** Адаптер для recycler из фрагмента viewPager-а с новостями, акциями, фильмами каро и т.п. на главном экране */

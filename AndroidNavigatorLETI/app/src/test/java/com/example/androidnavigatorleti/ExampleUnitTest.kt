@@ -1,7 +1,7 @@
 package com.example.androidnavigatorleti
 
-import com.example.androidnavigatorleti.data.UserInfo
-import com.example.androidnavigatorleti.data.UserLocation
+import com.example.androidnavigatorleti.data.room.tables.UserInfo
+import com.example.androidnavigatorleti.data.domain.UserLocation
 import com.example.androidnavigatorleti.ui.profile.RegistrationFragment
 import org.junit.Test
 

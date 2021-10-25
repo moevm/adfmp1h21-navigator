@@ -1,27 +1,29 @@
 package com.example.androidnavigatorleti
 
 import android.app.Application
-import androidx.room.Room
-import com.example.androidnavigatorleti.data.UserDao
-import com.example.androidnavigatorleti.data.UserDatabase
+import com.example.androidnavigatorleti.di.*
+import org.koin.android.ext.koin.androidContext
+import org.koin.android.ext.koin.androidLogger
+import org.koin.core.context.startKoin
+import org.koin.core.logger.Level
 
 class NavigatorApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
 
-        db = Room.databaseBuilder(
-            baseContext,
-            UserDatabase::class.java,
-            "NavigatorDatabase"
-        ).allowMainThreadQueries()
-            .fallbackToDestructiveMigration()
-            .build()
-        userDao = db.userDao()
-    }
+        //Инициализация DI
+        startKoin {
+            androidLogger(Level.ERROR)
+            androidContext(this@NavigatorApp)
 
-    companion object {
-        lateinit var db: UserDatabase
-        lateinit var userDao: UserDao
+            modules(
+                SharedPreferencesModule.module,
+                DatabaseModule.module,
+                DataSourcesModule.module,
+                RepositoryModule.module,
+                UseCaseModule.module
+            )
+        }
     }
 }

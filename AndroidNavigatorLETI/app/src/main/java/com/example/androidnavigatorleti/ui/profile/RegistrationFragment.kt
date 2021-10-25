@@ -7,10 +7,9 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.Toast
 import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.viewModels
 import com.example.androidnavigatorleti.R
 import com.example.androidnavigatorleti.base.BaseFragment
-import com.example.androidnavigatorleti.data.UserInfo
+import com.example.androidnavigatorleti.data.room.tables.UserInfo
 import kotlinx.android.synthetic.main.fragment_registration.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -62,7 +61,8 @@ class RegistrationFragment : BaseFragment() {
                         name = name_text.toString(),
                         surname = surname_text.toString(),
                         birthday = birthday_text.toString()
-                ))
+                )
+                )
                 openFragment(R.id.history)
             }
         }

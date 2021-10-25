@@ -1,4 +1,4 @@
-package com.example.androidnavigatorleti.data
+package com.example.androidnavigatorleti.data.room.tables
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
@@ -11,5 +11,3 @@ data class UserLocation(
     @ColumnInfo(name = "lat") val lat: Double,
     @ColumnInfo(name = "lng") val lng: Double
 )
-
-fun UserLocation.toLatLng(): LatLng = LatLng(this.lat, this.lng)

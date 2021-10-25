@@ -1,8 +1,8 @@
 package com.example.androidnavigatorleti.ui.history
 
 import androidx.lifecycle.ViewModel
-import com.example.androidnavigatorleti.data.SearchHistoryItem
-import com.example.androidnavigatorleti.data.UserInfo
+import com.example.androidnavigatorleti.data.room.tables.SearchHistoryItem
+import com.example.androidnavigatorleti.data.room.tables.UserInfo
 import com.example.androidnavigatorleti.uc.UserUc
 
 class HistoryViewModel : ViewModel() {
@@ -14,6 +14,6 @@ class HistoryViewModel : ViewModel() {
     fun getSearchHistory() = userUc.getSearchHistory()
 
     fun deleteItem(item: SearchHistoryItem) {
-        userUc.deleteItem(item)
+        userUc.deleteUser(item)
     }
 }

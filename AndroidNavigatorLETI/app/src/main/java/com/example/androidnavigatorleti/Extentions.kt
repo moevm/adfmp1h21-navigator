@@ -6,6 +6,8 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.navigation.NavController
+import com.example.androidnavigatorleti.base.Navigation
 
 const val PERMISSION_REQUEST_CODE = 1001
 const val BACKGROUND_LOCATION_PERMISSION_REQUEST_CODE = 1002
@@ -40,3 +42,19 @@ fun Fragment.requestLocationPermissions() {
 
 private fun Context.checkSinglePermission(permission: String): Boolean =
     ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
+
+/**
+ * For use with `when` expression.
+ * @see <a href="https://proandroiddev.com/til-when-is-when-exhaustive-31d69f630a8b">https://proandroiddev.com/til-when-is-when-exhaustive-31d69f630a8b</a>
+ */
+val <T> T.exhaustive: T
+    get() = this
+
+fun NavController.navigateTo(navigation: Navigation) {
+    @Suppress("IMPLICIT_CAST_TO_ANY")
+    when (navigation) {
+        is Navigation.To -> navigate(navigation.navDirections)
+        is Navigation.Back -> popBackStack()
+        is Navigation.BackTo -> popBackStack(navigation.destinationId, navigation.inclusive)
+    }.exhaustive
+}

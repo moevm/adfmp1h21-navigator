@@ -1,4 +1,4 @@
-package com.example.androidnavigatorleti.data
+package com.example.androidnavigatorleti.data.room.tables
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity

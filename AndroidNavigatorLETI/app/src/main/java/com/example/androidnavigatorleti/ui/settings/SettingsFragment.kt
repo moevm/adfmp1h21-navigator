@@ -1,18 +1,12 @@
 package com.example.androidnavigatorleti.ui.settings
 
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
-import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.example.androidnavigatorleti.PERMISSION_REQUEST_CODE
 import com.example.androidnavigatorleti.R
 import com.example.androidnavigatorleti.base.BaseFragment
-import com.example.androidnavigatorleti.checkLocationPermission
-import com.example.androidnavigatorleti.preferences.SharedPreferencesManager
-import com.example.androidnavigatorleti.requestLocationPermissions
 import kotlinx.android.synthetic.main.fragment_settings.*
 import kotlinx.android.synthetic.main.settings_switch.view.*
 

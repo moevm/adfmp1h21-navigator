@@ -1,10 +1,10 @@
-package com.example.androidnavigatorleti.data
+package com.example.androidnavigatorleti.data.domain
 
 import android.os.Parcelable
 import kotlinx.android.parcel.Parcelize
 
 @Parcelize
-data class ParcelUserLocation(
+data class UserLocation(
     val lat: Double,
     val lng: Double
 ) : Parcelable

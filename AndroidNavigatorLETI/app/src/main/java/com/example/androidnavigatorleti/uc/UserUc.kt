@@ -1,27 +1,24 @@
 package com.example.androidnavigatorleti.uc
 
-import com.example.androidnavigatorleti.NavigatorApp
-import com.example.androidnavigatorleti.data.SearchHistoryItem
-import com.example.androidnavigatorleti.data.UserDao
-import com.example.androidnavigatorleti.data.UserInfo
+import com.example.androidnavigatorleti.data.repositories.UserRepository
+import com.example.androidnavigatorleti.data.room.tables.SearchHistoryItem
+import com.example.androidnavigatorleti.data.room.tables.UserInfo
 
-class UserUc {
+class UserUc(private val userRepository: UserRepository) {
 
-    private val dao: UserDao = NavigatorApp.userDao
+    fun getUserOrNull(): UserInfo? = userRepository.getUserOrNull()
 
-    fun getUserOrNull(): UserInfo? = dao.getUser()
-
-    fun getSearchHistory(): List<SearchHistoryItem> = dao.getSearchHistory()
+    fun getSearchHistory(): List<SearchHistoryItem> = userRepository.getSearchHistory()
 
     fun insertUser(info: UserInfo) {
-        dao.insertUser(info)
+        userRepository.insertUser(info)
     }
 
-    fun deleteItem(item: SearchHistoryItem) {
-        dao.deleteSearchHistoryItem(item)
+    fun deleteUser(item: SearchHistoryItem) {
+        userRepository.deleteHistoryItem(item)
     }
 
     fun addSearchHistoryItem(item: SearchHistoryItem) {
-        dao.addSearchHistoryItem(item)
+        userRepository.addSearchHistoryItem(item)
     }
 }

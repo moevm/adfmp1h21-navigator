@@ -1,7 +1,7 @@
 package com.example.androidnavigatorleti.ui.profile
 
 import androidx.lifecycle.ViewModel
-import com.example.androidnavigatorleti.data.UserInfo
+import com.example.androidnavigatorleti.data.room.tables.UserInfo
 import com.example.androidnavigatorleti.uc.UserUc
 
 class RegistrationVIewModel : ViewModel() {

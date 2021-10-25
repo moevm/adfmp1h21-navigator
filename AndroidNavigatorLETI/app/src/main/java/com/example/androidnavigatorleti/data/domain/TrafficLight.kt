@@ -1,4 +1,4 @@
-package com.example.androidnavigatorleti.data
+package com.example.androidnavigatorleti.data.domain
 
 import com.google.android.gms.maps.model.LatLng
 

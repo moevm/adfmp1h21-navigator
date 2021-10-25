@@ -2,8 +2,6 @@ package com.example.androidnavigatorleti.ui.main
 
 import android.content.Context
 import android.content.Intent
-import android.location.Location
-import android.location.LocationListener
 import android.location.LocationManager
 import android.net.Uri
 import android.os.Bundle
@@ -22,11 +20,10 @@ import com.example.androidnavigatorleti.PERMISSION_REQUEST_CODE
 import com.example.androidnavigatorleti.R
 import com.example.androidnavigatorleti.base.BaseFragment
 import com.example.androidnavigatorleti.checkLocationPermission
-import com.example.androidnavigatorleti.data.ParcelUserLocation
-import com.example.androidnavigatorleti.data.UserLocation
-import com.example.androidnavigatorleti.data.toLatLng
-import com.example.androidnavigatorleti.preferences.SharedPreferencesManager.Keys.LAT_KEY
-import com.example.androidnavigatorleti.preferences.SharedPreferencesManager.Keys.LNG_KEY
+import com.example.androidnavigatorleti.data.domain.UserLocation
+import com.example.androidnavigatorleti.data.preferences.SharedPreferencesManager
+import com.example.androidnavigatorleti.data.preferences.SharedPreferencesManager.Keys.LAT_KEY
+import com.example.androidnavigatorleti.data.preferences.SharedPreferencesManager.Keys.LNG_KEY
 import com.example.androidnavigatorleti.requestLocationPermissions
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -43,8 +40,7 @@ import kotlinx.coroutines.Runnable
 import java.util.*
 import kotlin.math.floor
 
-
-class MapFragment : BaseFragment() {
+class MapFragment : BaseFragment<MapViewModel, MapViewState>(R.layout.fragment_map) {
 
     companion object {
 
@@ -52,7 +48,7 @@ class MapFragment : BaseFragment() {
         private const val ZOOM_SPEED = 400
     }
 
-    private val viewModel: MapViewModel by viewModels()
+    override val viewModel: MapViewModel by viewModels()
     private val args: MapFragmentArgs by navArgs()
 
     private var map: GoogleMap? = null
@@ -109,7 +105,7 @@ class MapFragment : BaseFragment() {
 
                 if (markerLocation != null) {
                     val direction = MapFragmentDirections.actionFirstMarkerSet(
-                        ParcelUserLocation(
+                        UserLocation(
                             markerLocation.latitude,
                             markerLocation.longitude
                         )
@@ -131,10 +127,10 @@ class MapFragment : BaseFragment() {
                 val secondMarkerLocation: LatLng? = secondMarker?.position
 
                 val firstParcelUserLoc = firstMarkerLocation?.let {
-                    ParcelUserLocation(it.latitude, it.longitude)
+                    UserLocation(it.latitude, it.longitude)
                 }
                 val secondParcelUserLoc = secondMarkerLocation?.let {
-                    ParcelUserLocation(it.latitude, it.longitude)
+                    UserLocation(it.latitude, it.longitude)
                 }
                 val direction = if (args.setFirstMarkerWithSecond) {
                     MapFragmentDirections.actionAllMarkersSet(
@@ -166,13 +162,10 @@ class MapFragment : BaseFragment() {
         viewModel.initTrafficLightList()
 
         date.set(2021, 4, 27, 12, 30, 15)
-        Log.d("HIHI", ((date.time.time / 1000) % viewModel.trafficLights[0].interval).toString())
-//        date.set(2021, 4, 25, 2, 17, 36)
-//        Log.d("HIHI", ((date.time.time / 1000) % viewModel.trafficLights[3].interval).toString())
 
         map_view.onResume()
         my_location_floating_button.setOnClickListener {
-            val newLocation = getLocation()
+            val newLocation = viewModel.getLocation()
             locButtonClicked = true
             showLocation(newLocation, permissionGranted, true)
         }
@@ -274,27 +267,6 @@ class MapFragment : BaseFragment() {
         }
 
         viewModel.collectFlows()
-
-        viewModel.viewStateParamsLiveData.observe(
-            viewLifecycleOwner,
-            Observer { params ->
-                speed_layout?.current_speed?.text = params.currentSpeed.toString()
-                speed_layout?.min_speed?.text = params.minSpeed.toString()
-                speed_layout?.max_speed?.text = params.maxSpeed.toString()
-                distance_layout?.traffic_distance?.text = formatDistance(params.trafficLightDistance)
-                distance_layout?.point_distance?.text = formatDistance(params.currentDistance)
-            }
-        )
-    }
-
-    private fun restartApp(action: String? = null) {
-        val i = requireContext().packageManager
-            .getLaunchIntentForPackage(requireContext().packageName)?.apply {
-                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                if (action != null) setAction(action)
-                putExtra("open_app", true)
-            }
-        startActivity(i)
     }
 
     private fun countDistance(
@@ -344,7 +316,7 @@ class MapFragment : BaseFragment() {
                     val latitude = location.latitude
                     val longitude = location.longitude
 
-                    val oldLoc = getLocation()
+                    val oldLoc = viewModel.getLocation()
                     val newLoc = UserLocation(lat = latitude, lng = longitude)
 
                     viewModel.newLocation = newLoc
@@ -354,7 +326,7 @@ class MapFragment : BaseFragment() {
                     } else {
                         locButtonClicked = false
                     }
-                    saveUserLocation(newLoc)
+                    viewModel.saveUserLocation(newLoc)
                 }
             }
         }
@@ -379,7 +351,7 @@ class MapFragment : BaseFragment() {
                 if (!args.setFirstMarker && !args.setSecondMarker) {
                     setOnMapLongClickListener {
                         val direction = MapFragmentDirections.actionMapLongClick(
-                            ParcelUserLocation(
+                            UserLocation(
                                 it.latitude,
                                 it.longitude
                             )
@@ -398,7 +370,7 @@ class MapFragment : BaseFragment() {
     }
 
     private fun showMarkerOnMap() {
-        val userLoc = getLocation()
+        val userLoc = viewModel.getLocation()
         if (!args.makeRoot) {
             showLocation(userLoc, permissionGranted, true)
         }
@@ -467,12 +439,6 @@ class MapFragment : BaseFragment() {
         secondMarker?.remove()
     }
 
-    private fun saveUserLocation(location: UserLocation) {
-        setLocation(location)
-        prefsManager.putDouble(LAT_KEY, location.lat)
-        prefsManager.putDouble(LNG_KEY, location.lng)
-    }
-
     private fun showLocation(
         location: UserLocation?,
         permissionIsGranted: Boolean,
@@ -511,5 +477,13 @@ class MapFragment : BaseFragment() {
         val padding = (width * 0.10).toInt() // offset from edges of the map 10% of screen
 
         map?.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, width, height, padding))
+    }
+
+    override fun renderState(state: MapViewState) {
+        speed_layout?.current_speed?.text = state.currentSpeed.toString()
+        speed_layout?.min_speed?.text = state.minSpeed.toString()
+        speed_layout?.max_speed?.text = state.maxSpeed.toString()
+        distance_layout?.traffic_distance?.text = formatDistance(state.trafficLightDistance)
+        distance_layout?.point_distance?.text = formatDistance(state.currentDistance)
     }
 }
