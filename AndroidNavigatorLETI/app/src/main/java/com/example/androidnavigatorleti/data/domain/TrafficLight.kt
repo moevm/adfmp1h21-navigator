@@ -3,10 +3,10 @@ package com.example.androidnavigatorleti.data.domain
 import com.google.android.gms.maps.model.LatLng
 
 data class TrafficLight(
-        var location: LatLng,
+        val location: LatLng,
         var distance: Double,
-        var orientation: Long,
-        var startGreenOffset: Long,
-        var startRedOffset: Long,
-        var interval: Long
+        val orientation: Long,
+        val startGreenOffset: Long,
+        val startRedOffset: Long,
+        val interval: Long
 )

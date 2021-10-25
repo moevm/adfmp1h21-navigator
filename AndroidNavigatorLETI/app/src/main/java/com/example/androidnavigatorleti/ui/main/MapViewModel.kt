@@ -81,8 +81,7 @@ class MapViewModel : BaseViewModel<MapViewState>(MapViewState()), CoroutineScope
         } ?: 0.0
 
         lastLocation = newLocation
-        trafficLights.forEach { light ->
-            light.distance = SphericalUtil.computeDistanceBetween(newLocation.toLatLng(), light.location)
+        trafficLights.forEach { light -> light.distance = SphericalUtil.computeDistanceBetween(newLocation.toLatLng(), light.location)
         }
 
         if (isPolylineBuild) {
