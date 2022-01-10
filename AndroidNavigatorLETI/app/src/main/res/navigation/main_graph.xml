@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/main"
-        android:name="com.example.androidnavigatorleti.ui.main.MapFragment"
+        android:name="com.example.androidnavigatorleti.presentation.main.MapFragment"
         android:label="Map"
         tools:layout="@layout/fragment_map">
 
@@ -29,13 +29,13 @@
         <argument
             android:name="firstMarker"
             android:defaultValue="@null"
-            app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
+            app:argType="com.example.androidnavigatorleti.domain.model.ParcelUserLocation"
             app:nullable="true" />
 
         <argument
             android:name="secondMarker"
             android:defaultValue="@null"
-            app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
+            app:argType="com.example.androidnavigatorleti.domain.model.ParcelUserLocation"
             app:nullable="true" />
 
         <argument
@@ -51,7 +51,7 @@
             <argument
                 android:name="firstMarker"
                 android:defaultValue="@null"
-                app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
+                app:argType="com.example.androidnavigatorleti.domain.model.ParcelUserLocation"
                 app:nullable="true" />
 
         </action>
@@ -64,13 +64,13 @@
             <argument
                 android:name="firstMarker"
                 android:defaultValue="@null"
-                app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
+                app:argType="com.example.androidnavigatorleti.domain.model.ParcelUserLocation"
                 app:nullable="true" />
 
             <argument
                 android:name="secondMarker"
                 android:defaultValue="@null"
-                app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
+                app:argType="com.example.androidnavigatorleti.domain.model.ParcelUserLocation"
                 app:nullable="true" />
 
         </action>
@@ -83,7 +83,7 @@
             <argument
                 android:name="point"
                 android:defaultValue="@null"
-                app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
+                app:argType="com.example.androidnavigatorleti.domain.model.ParcelUserLocation"
                 app:nullable="true" />
 
         </action>
@@ -92,7 +92,7 @@
 
     <fragment
         android:id="@+id/search"
-        android:name="com.example.androidnavigatorleti.ui.search.SearchFragment"
+        android:name="com.example.androidnavigatorleti.presentation.search.SearchFragment"
         android:label="Search"
         tools:layout="@layout/fragment_search">
 
@@ -104,19 +104,19 @@
         <argument
             android:name="point"
             android:defaultValue="@null"
-            app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
+            app:argType="com.example.androidnavigatorleti.domain.model.ParcelUserLocation"
             app:nullable="true" />
 
         <argument
             android:name="firstMarker"
             android:defaultValue="@null"
-            app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
+            app:argType="com.example.androidnavigatorleti.domain.model.ParcelUserLocation"
             app:nullable="true" />
 
         <argument
             android:name="secondMarker"
             android:defaultValue="@null"
-            app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
+            app:argType="com.example.androidnavigatorleti.domain.model.ParcelUserLocation"
             app:nullable="true" />
 
         <action
@@ -148,7 +148,7 @@
             <argument
                 android:name="secondMarker"
                 android:defaultValue="@null"
-                app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
+                app:argType="com.example.androidnavigatorleti.domain.model.ParcelUserLocation"
                 app:nullable="true" />
         </action>
 
@@ -165,7 +165,7 @@
             <argument
                 android:name="secondMarker"
                 android:defaultValue="@null"
-                app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
+                app:argType="com.example.androidnavigatorleti.domain.model.ParcelUserLocation"
                 app:nullable="true" />
         </action>
 
@@ -182,13 +182,13 @@
             <argument
                 android:name="firstMarker"
                 android:defaultValue="@null"
-                app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
+                app:argType="com.example.androidnavigatorleti.domain.model.ParcelUserLocation"
                 app:nullable="true" />
 
             <argument
                 android:name="secondMarker"
                 android:defaultValue="@null"
-                app:argType="com.example.androidnavigatorleti.data.ParcelUserLocation"
+                app:argType="com.example.androidnavigatorleti.domain.model.ParcelUserLocation"
                 app:nullable="true" />
         </action>
 
@@ -196,7 +196,7 @@
 
     <fragment
         android:id="@+id/history"
-        android:name="com.example.androidnavigatorleti.ui.history.HistoryFragment"
+        android:name="com.example.androidnavigatorleti.presentation.history.HistoryFragment"
         android:label="History"
         tools:layout="@layout/fragment_history">
 
@@ -216,31 +216,31 @@
 
     <fragment
         android:id="@+id/menu_navigation_view"
-        android:name="com.example.androidnavigatorleti.ui.menu.MenuFragment"
+        android:name="com.example.androidnavigatorleti.presentation.menu.MenuFragment"
         android:label="Menu"
         tools:layout="@layout/fragment_menu" />
 
     <fragment
         android:id="@+id/settings"
-        android:name="com.example.androidnavigatorleti.ui.settings.SettingsFragment"
+        android:name="com.example.androidnavigatorleti.presentation.settings.SettingsFragment"
         android:label="Settings"
         tools:layout="@layout/fragment_settings" />
 
     <fragment
         android:id="@+id/about"
-        android:name="com.example.androidnavigatorleti.ui.about.AboutFragment"
+        android:name="com.example.androidnavigatorleti.presentation.about.AboutFragment"
         android:label="About"
         tools:layout="@layout/fragment_about" />
 
     <fragment
         android:id="@+id/unregistered"
-        android:name="com.example.androidnavigatorleti.ui.profile.UserUnregisteredFragment"
+        android:name="com.example.androidnavigatorleti.presentation.profile.UserUnregisteredFragment"
         android:label="History"
         tools:layout="@layout/fragment_unregistered" />
 
     <fragment
         android:id="@+id/registration"
-        android:name="com.example.androidnavigatorleti.ui.profile.RegistrationFragment"
+        android:name="com.example.androidnavigatorleti.presentation.profile.RegistrationFragment"
         android:label="Registration"
         tools:layout="@layout/fragment_registration" />
 

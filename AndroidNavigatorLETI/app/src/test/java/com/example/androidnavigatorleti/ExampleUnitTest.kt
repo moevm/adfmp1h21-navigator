@@ -1,8 +1,8 @@
 package com.example.androidnavigatorleti
 
-import com.example.androidnavigatorleti.data.UserInfo
+import com.example.androidnavigatorleti.data.room.tables.DbUserInfo
 import com.example.androidnavigatorleti.data.UserLocation
-import com.example.androidnavigatorleti.ui.profile.RegistrationFragment
+import com.example.androidnavigatorleti.presentation.profile.RegistrationFragment
 import org.junit.Test
 
 import org.junit.Assert.*
@@ -70,7 +70,7 @@ class ExampleUnitTest {
     private companion object {
         const val VALID_BIRTHDAY = "01.01.1991"
         const val INVALID_BITHDAY = "01.01.1901"
-        val USER_INFO = UserInfo(name = "name", surname = "surname", birthday = "01.11.1999")
+        val USER_INFO = DbUserInfo(name = "name", surname = "surname", birthday = "01.11.1999")
         val USER_LOCATION = UserLocation(lat = 0.0, lng = 0.0)
     }
 }
